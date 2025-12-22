@@ -142,7 +142,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateUserRole = async (userId: string, newRole: string) => {
+  const handleUpdateUserRole = async (userId: string, newRole: 'admin' | 'seller' | 'customer') => {
     const { error } = await supabase
       .from('user_roles')
       .update({ role: newRole })
