@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Package, ShoppingCart, TrendingUp, Check, X, Eye, 
-  LogOut, LayoutDashboard, UserCheck, Settings 
+  LogOut, LayoutDashboard, UserCheck, Settings, Plus 
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -26,6 +27,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface Product {
   id: string;
@@ -60,13 +68,21 @@ interface UserWithRole {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, session } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'users'>('overview');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAddSellerOpen, setIsAddSellerOpen] = useState(false);
+  const [sellerForm, setSellerForm] = useState({
+    email: '',
+    password: '',
+    fullName: '',
+    phone: ''
+  });
+  const [isCreatingSeller, setIsCreatingSeller] = useState(false);
 
   useEffect(() => {
     fetchAllData();
@@ -153,6 +169,41 @@ const AdminDashboard: React.FC = () => {
     } else {
       toast.success('User role updated');
       fetchUsers();
+    }
+  };
+
+  const handleCreateSeller = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session?.access_token) {
+      toast.error('Not authenticated');
+      return;
+    }
+
+    setIsCreatingSeller(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-seller`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(sellerForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create seller');
+      }
+
+      toast.success('Seller created successfully!');
+      setIsAddSellerOpen(false);
+      setSellerForm({ email: '', password: '', fullName: '', phone: '' });
+      fetchUsers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create seller');
+    } finally {
+      setIsCreatingSeller(false);
     }
   };
 
@@ -456,7 +507,65 @@ const AdminDashboard: React.FC = () => {
 
             {activeTab === 'users' && (
               <div className="space-y-6">
-                <h1 className="text-2xl font-bold font-heading">Manage Users</h1>
+                <div className="flex justify-between items-center">
+                  <h1 className="text-2xl font-bold font-heading">Manage Users</h1>
+                  <Dialog open={isAddSellerOpen} onOpenChange={setIsAddSellerOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Seller
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Seller</DialogTitle>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateSeller} className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium">Full Name *</label>
+                          <Input
+                            value={sellerForm.fullName}
+                            onChange={(e) => setSellerForm({ ...sellerForm, fullName: e.target.value })}
+                            placeholder="Seller name"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Email *</label>
+                          <Input
+                            type="email"
+                            value={sellerForm.email}
+                            onChange={(e) => setSellerForm({ ...sellerForm, email: e.target.value })}
+                            placeholder="seller@example.com"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Phone</label>
+                          <Input
+                            type="tel"
+                            value={sellerForm.phone}
+                            onChange={(e) => setSellerForm({ ...sellerForm, phone: e.target.value })}
+                            placeholder="Phone number"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium">Password *</label>
+                          <Input
+                            type="password"
+                            value={sellerForm.password}
+                            onChange={(e) => setSellerForm({ ...sellerForm, password: e.target.value })}
+                            placeholder="Minimum 6 characters"
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={isCreatingSeller}>
+                          {isCreatingSeller ? 'Creating...' : 'Create Seller Account'}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 
                 <Card>
                   <Table>
