@@ -13,35 +13,38 @@ const MobileBottomNav: React.FC = () => {
 
   // Define nav items based on role
   const getNavItems = () => {
-    const baseItems = [
-      { path: '/', label: 'Home', icon: Home },
-      { path: '/products', label: 'Shop', icon: Search },
-      { path: '/cart', label: 'Cart', icon: ShoppingCart, badge: totalItems },
-    ];
-
     if (!user) {
-      baseItems.push({ path: '/login', label: 'Login', icon: User });
-      return baseItems;
+      return [
+        { path: '/', label: 'Home', icon: Home },
+        { path: '/products', label: 'Shop', icon: Search },
+        { path: '/cart', label: 'Cart', icon: ShoppingCart, badge: totalItems },
+        { path: '/login', label: 'Login', icon: User },
+      ];
     }
 
     if (role === 'admin') {
-      baseItems.push(
-        { path: '/admin', label: 'Admin', icon: LayoutDashboard },
-        { path: '/profile', label: 'Profile', icon: User }
-      );
-    } else if (role === 'seller') {
-      baseItems.push(
-        { path: '/seller', label: 'Seller', icon: Package },
-        { path: '/profile', label: 'Profile', icon: User }
-      );
-    } else {
-      baseItems.push(
-        { path: '/wishlist', label: 'Wishlist', icon: Heart },
-        { path: '/profile', label: 'Profile', icon: User }
-      );
+      return [
+        { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/products', label: 'Products', icon: Package },
+        { path: '/profile', label: 'Profile', icon: User },
+      ];
     }
 
-    return baseItems;
+    if (role === 'seller') {
+      return [
+        { path: '/seller', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/profile', label: 'Profile', icon: User },
+      ];
+    }
+
+    // Customer role
+    return [
+      { path: '/', label: 'Home', icon: Home },
+      { path: '/products', label: 'Shop', icon: Search },
+      { path: '/cart', label: 'Cart', icon: ShoppingCart, badge: totalItems },
+      { path: '/wishlist', label: 'Wishlist', icon: Heart },
+      { path: '/profile', label: 'Profile', icon: User },
+    ];
   };
 
   const navItems = getNavItems();
