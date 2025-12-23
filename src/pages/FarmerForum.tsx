@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Heart, Send, Plus, Filter, TrendingUp, Clock, User, Trash2, Pin } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -60,6 +60,57 @@ const FarmerForum = () => {
   const [selectedPost, setSelectedPost] = useState<ForumPost | null>(null);
   const [newPost, setNewPost] = useState({ title: '', content: '', category: 'general' });
   const [newComment, setNewComment] = useState('');
+
+  // Realtime subscription for posts
+  useEffect(() => {
+    const channel = supabase
+      .channel('forum-posts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'forum_posts'
+        },
+        (payload) => {
+          console.log('Forum post change:', payload);
+          queryClient.invalidateQueries({ queryKey: ['forum-posts'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
+  // Realtime subscription for comments
+  useEffect(() => {
+    if (!selectedPost) return;
+
+    const channel = supabase
+      .channel('forum-comments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'forum_comments',
+          filter: `post_id=eq.${selectedPost.id}`
+        },
+        (payload) => {
+          console.log('Forum comment change:', payload);
+          queryClient.invalidateQueries({ queryKey: ['forum-comments', selectedPost.id] });
+          // Also update the post's comment count
+          queryClient.invalidateQueries({ queryKey: ['forum-posts'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedPost?.id, queryClient]);
 
   // Fetch posts
   const { data: posts = [], isLoading: postsLoading } = useQuery({
