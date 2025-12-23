@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, User, Globe, Heart, LayoutDashboard, Package, Users, LogOut, Sprout } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, User, Globe, Heart, LayoutDashboard, Package, Users, LogOut, Sprout, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,7 @@ const Header = () => {
   const baseNavLinks = [
     { path: '/', label: t('home') },
     { path: '/products', label: t('products') },
+    { path: '/forum', label: '💬 Forum' },
   ];
 
   // Role-specific nav links
