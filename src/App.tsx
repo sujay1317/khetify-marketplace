@@ -19,6 +19,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerProfile from "./pages/CustomerProfile";
 import Wishlist from "./pages/Wishlist";
+import FarmerCorner from "./pages/FarmerCorner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
                   <Route path="/orders" element={<CustomerOrders />} />
                   <Route path="/profile" element={<CustomerProfile />} />
                   <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="/farmer-corner" element={<FarmerCorner />} />
                   <Route 
                     path="/seller/*" 
                     element={
