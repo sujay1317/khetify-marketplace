@@ -16,6 +16,8 @@ import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import ManageOrders from "./pages/admin/ManageOrders";
+import ManageUsers from "./pages/admin/ManageUsers";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerProfile from "./pages/CustomerProfile";
 import Wishlist from "./pages/Wishlist";
@@ -57,10 +59,26 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/admin/*" 
+                    path="/admin" 
                     element={
                       <ProtectedRoute allowedRoles={['admin']}>
                         <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/orders" 
+                    element={
+                      <ProtectedRoute allowedRoles={['admin']}>
+                        <ManageOrders />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/users" 
+                    element={
+                      <ProtectedRoute allowedRoles={['admin']}>
+                        <ManageUsers />
                       </ProtectedRoute>
                     } 
                   />
