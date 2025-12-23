@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, User, Globe, Heart } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, User, Globe, Heart, LayoutDashboard, Package, Users, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { useLanguage, languageNames, Language } from '@/contexts/LanguageContext';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
@@ -17,15 +20,46 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { totalItems } = useCart();
+  const { user, role, signOut, profile } = useAuth();
   const location = useLocation();
 
-  const navLinks = [
+  // Base nav links for everyone
+  const baseNavLinks = [
     { path: '/', label: t('home') },
     { path: '/products', label: t('products') },
-    { path: '/categories', label: t('categories') },
-    { path: '/orders', label: t('orders') },
-    { path: '/wishlist', label: '❤️ Wishlist' },
   ];
+
+  // Role-specific nav links
+  const getNavLinks = () => {
+    const links = [...baseNavLinks];
+    
+    if (!user) {
+      // Not logged in - show basic links
+      return links;
+    }
+
+    if (role === 'admin') {
+      links.push(
+        { path: '/admin', label: '👑 Admin Dashboard' },
+        { path: '/orders', label: t('orders') },
+      );
+    } else if (role === 'seller') {
+      links.push(
+        { path: '/seller', label: '🌾 Seller Dashboard' },
+        { path: '/orders', label: t('orders') },
+      );
+    } else {
+      // Customer
+      links.push(
+        { path: '/orders', label: t('orders') },
+        { path: '/wishlist', label: '❤️ Wishlist' },
+      );
+    }
+
+    return links;
+  };
+
+  const navLinks = getNavLinks();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -116,13 +150,66 @@ const Header = () => {
               </Button>
             </Link>
 
-            {/* User */}
-            <Link to="/profile">
-              <Button variant="soft" size="sm" className="hidden sm:flex gap-2">
-                <User className="w-4 h-4" />
-                Profile
-              </Button>
-            </Link>
+            {/* User Menu */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="soft" size="sm" className="hidden sm:flex gap-2">
+                    <User className="w-4 h-4" />
+                    {profile?.full_name?.split(' ')[0] || 'Account'}
+                    {role && (
+                      <Badge variant={role === 'admin' ? 'destructive' : role === 'seller' ? 'default' : 'secondary'} className="text-xs ml-1">
+                        {role}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[180px]">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  {role === 'admin' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center gap-2">
+                        <LayoutDashboard className="w-4 h-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {role === 'seller' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/seller" className="flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        Seller Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  {role === 'customer' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/wishlist" className="flex items-center gap-2">
+                        <Heart className="w-4 h-4" />
+                        Wishlist
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut} className="text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/login">
+                <Button variant="soft" size="sm" className="hidden sm:flex gap-2">
+                  <User className="w-4 h-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile Menu Toggle */}
             <Button
@@ -190,16 +277,33 @@ const Header = () => {
                 </div>
               </div>
 
-              <Link
-                to="/profile"
-                onClick={() => setIsMenuOpen(false)}
-                className="mt-2"
-              >
-                <Button variant="default" className="w-full">
-                  <User className="w-4 h-4 mr-2" />
-                  Profile
-                </Button>
-              </Link>
+              {user ? (
+                <div className="space-y-2 mt-2">
+                  <div className="px-4 py-2 bg-muted/50 rounded-lg">
+                    <p className="font-medium">{profile?.full_name || 'User'}</p>
+                    <Badge variant={role === 'admin' ? 'destructive' : role === 'seller' ? 'default' : 'secondary'} className="text-xs">
+                      {role}
+                    </Badge>
+                  </div>
+                  <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Button>
+                  </Link>
+                  <Button variant="destructive" className="w-full" onClick={() => { signOut(); setIsMenuOpen(false); }}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mt-2">
+                  <Button variant="default" className="w-full">
+                    <User className="w-4 h-4 mr-2" />
+                    Login
+                  </Button>
+                </Link>
+              )}
             </div>
           </nav>
         )}
