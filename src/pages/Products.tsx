@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Filter, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, X, ChevronDown, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/product/ProductCard';
@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { sampleProducts, categories } from '@/data/products';
+import { categories } from '@/data/products';
+import { supabase } from '@/integrations/supabase/client';
+import { Product } from '@/contexts/CartContext';
 import {
   Select,
   SelectContent,
@@ -24,10 +26,34 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 
+interface DBProduct {
+  id: string;
+  name: string;
+  name_hi: string | null;
+  description: string | null;
+  description_hi: string | null;
+  price: number;
+  original_price: number | null;
+  image: string | null;
+  category: string;
+  stock: number | null;
+  unit: string | null;
+  seller_id: string;
+  is_organic: boolean | null;
+  is_approved: boolean | null;
+}
+
+interface SellerProfile {
+  user_id: string;
+  full_name: string | null;
+}
+
 const Products: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, language } = useLanguage();
   
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>(
     searchParams.get('category') || 'all'
@@ -36,6 +62,69 @@ const Products: React.FC = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [showOrganic, setShowOrganic] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    
+    // Fetch approved products
+    const { data: productsData, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching products:', error);
+      setLoading(false);
+      return;
+    }
+
+    if (!productsData || productsData.length === 0) {
+      setProducts([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch seller profiles for all products
+    const sellerIds = [...new Set(productsData.map(p => p.seller_id))];
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('user_id, full_name')
+      .in('user_id', sellerIds);
+
+    const sellerMap: Record<string, string> = {};
+    profilesData?.forEach((profile: SellerProfile) => {
+      sellerMap[profile.user_id] = profile.full_name || 'Unknown Seller';
+    });
+
+    // Transform DB products to frontend Product type
+    const transformedProducts: Product[] = productsData.map((p: DBProduct) => ({
+      id: p.id,
+      name: p.name,
+      nameHi: p.name_hi || p.name,
+      nameMr: p.name_hi || p.name, // Fallback to Hindi or English
+      description: p.description || '',
+      price: p.price,
+      originalPrice: p.original_price || undefined,
+      image: p.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
+      category: p.category,
+      stock: p.stock || 0,
+      unit: p.unit || 'kg',
+      sellerId: p.seller_id,
+      sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
+      rating: 4.5, // Default rating since not stored in DB
+      reviews: Math.floor(Math.random() * 200) + 50, // Placeholder
+      isOrganic: p.is_organic || false,
+      isFeatured: false,
+    }));
+
+    setProducts(transformedProducts);
+    setLoading(false);
+  };
 
   const getCategoryName = (cat: typeof categories[0]) => {
     switch (language) {
@@ -46,7 +135,7 @@ const Products: React.FC = () => {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = [...sampleProducts];
+    let result = [...products];
 
     // Search filter
     if (searchQuery) {
@@ -56,7 +145,8 @@ const Products: React.FC = () => {
           p.name.toLowerCase().includes(query) ||
           p.nameHi.includes(query) ||
           p.nameMr.includes(query) ||
-          p.description.toLowerCase().includes(query)
+          p.description.toLowerCase().includes(query) ||
+          p.sellerName.toLowerCase().includes(query)
       );
     }
 
@@ -94,7 +184,7 @@ const Products: React.FC = () => {
     }
 
     return result;
-  }, [searchQuery, selectedCategory, sortBy, priceRange, showOrganic]);
+  }, [products, searchQuery, selectedCategory, sortBy, priceRange, showOrganic]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -121,6 +211,19 @@ const Products: React.FC = () => {
     priceRange[0] > 0 || priceRange[1] < 10000,
   ].filter(Boolean).length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-16 text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading products...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -132,7 +235,7 @@ const Products: React.FC = () => {
             {t('products')}
           </h1>
           <p className="text-muted-foreground">
-            {filteredProducts.length} products available
+            {filteredProducts.length} products available from various sellers
           </p>
         </div>
 
@@ -143,7 +246,7 @@ const Products: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder={t('search')}
+              placeholder={`${t('search')} products or sellers...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -337,11 +440,15 @@ const Products: React.FC = () => {
                 <div className="text-6xl mb-4">🔍</div>
                 <h3 className="text-xl font-semibold mb-2">No products found</h3>
                 <p className="text-muted-foreground mb-4">
-                  Try adjusting your filters or search query
+                  {products.length === 0 
+                    ? "No sellers have added products yet. Check back later!"
+                    : "Try adjusting your filters or search query"}
                 </p>
-                <Button onClick={clearFilters} variant="outline">
-                  Clear All Filters
-                </Button>
+                {products.length > 0 && (
+                  <Button onClick={clearFilters} variant="outline">
+                    Clear All Filters
+                  </Button>
+                )}
               </div>
             )}
           </div>
