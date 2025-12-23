@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Package, ShoppingCart, TrendingUp, Check, X, Eye, 
-  LogOut, LayoutDashboard, UserCheck, Settings, Plus 
+  LogOut, LayoutDashboard, UserCheck, Settings, Plus, BarChart3, Ticket 
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AnalyticsCharts from '@/components/admin/AnalyticsCharts';
+import CouponManager from '@/components/admin/CouponManager';
 import {
   Table,
   TableBody,
@@ -70,7 +72,7 @@ interface UserWithRole {
 const AdminDashboard: React.FC = () => {
   const { profile, signOut, session } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'products' | 'orders' | 'users' | 'coupons'>('overview');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -290,6 +292,24 @@ const AdminDashboard: React.FC = () => {
                 >
                   <Users className="w-5 h-5" />
                   Users
+                </button>
+                <button
+                  onClick={() => setActiveTab('analytics')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    activeTab === 'analytics' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  }`}
+                >
+                  <BarChart3 className="w-5 h-5" />
+                  Analytics
+                </button>
+                <button
+                  onClick={() => setActiveTab('coupons')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    activeTab === 'coupons' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  }`}
+                >
+                  <Ticket className="w-5 h-5" />
+                  Coupons
                 </button>
                 <button
                   onClick={handleLogout}
@@ -642,6 +662,14 @@ const AdminDashboard: React.FC = () => {
                 </Card>
               </div>
             )}
+            {activeTab === 'analytics' && (
+              <div className="space-y-6">
+                <h1 className="text-2xl font-bold font-heading">Analytics Dashboard</h1>
+                <AnalyticsCharts orders={orders} products={products} />
+              </div>
+            )}
+
+            {activeTab === 'coupons' && <CouponManager />}
           </div>
         </div>
       </main>

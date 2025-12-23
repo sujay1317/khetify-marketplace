@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, User, Globe } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, User, Globe, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLanguage, languageNames, Language } from '@/contexts/LanguageContext';
@@ -24,6 +24,7 @@ const Header = () => {
     { path: '/products', label: t('products') },
     { path: '/categories', label: t('categories') },
     { path: '/orders', label: t('orders') },
+    { path: '/wishlist', label: '❤️ Wishlist' },
   ];
 
   const isActive = (path: string) => location.pathname === path;

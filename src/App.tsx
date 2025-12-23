@@ -17,6 +17,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerProfile from "./pages/CustomerProfile";
+import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/categories" element={<Products />} />
                 <Route path="/orders" element={<CustomerOrders />} />
                 <Route path="/profile" element={<CustomerProfile />} />
+                <Route path="/wishlist" element={<Wishlist />} />
                 <Route 
                   path="/seller/*" 
                   element={
