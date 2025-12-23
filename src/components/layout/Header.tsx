@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, User, Globe, Heart, LayoutDashboard, Package, Users, LogOut } from 'lucide-react';
+import { ShoppingCart, Menu, X, Search, User, Globe, Heart, LayoutDashboard, Package, Users, LogOut, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +46,7 @@ const Header = () => {
     } else if (role === 'seller') {
       links.push(
         { path: '/seller', label: '🌾 Seller Dashboard' },
+        { path: '/farmer-corner', label: '🌱 Farmer Corner' },
         { path: '/orders', label: t('orders') },
       );
     } else {
@@ -180,12 +181,20 @@ const Header = () => {
                     </DropdownMenuItem>
                   )}
                   {role === 'seller' && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/seller" className="flex items-center gap-2">
-                        <Package className="w-4 h-4" />
-                        Seller Dashboard
-                      </Link>
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/seller" className="flex items-center gap-2">
+                          <Package className="w-4 h-4" />
+                          Seller Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/farmer-corner" className="flex items-center gap-2">
+                          <Sprout className="w-4 h-4" />
+                          Farmer Corner
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
                   )}
                   {role === 'customer' && (
                     <DropdownMenuItem asChild>
