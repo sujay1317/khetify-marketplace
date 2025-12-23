@@ -39,6 +39,50 @@ const CustomerOrders: React.FC = () => {
     }
   }, [user]);
 
+  // Realtime subscription for order updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('customer-orders-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `customer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Order updated:', payload);
+          // Update the specific order in state
+          setOrders(prev => prev.map(order => 
+            order.id === payload.new.id 
+              ? { ...order, ...payload.new } 
+              : order
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders',
+          filter: `customer_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('New order:', payload);
+          setOrders(prev => [payload.new as Order, ...prev]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const fetchOrders = async () => {
     if (!user) return;
 
