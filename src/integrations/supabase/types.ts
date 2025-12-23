@@ -95,6 +95,13 @@ export type Database = {
             referencedRelation: "forum_posts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "forum_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       forum_likes: {
@@ -133,6 +140,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "forum_posts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -173,7 +187,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       order_items: {
         Row: {

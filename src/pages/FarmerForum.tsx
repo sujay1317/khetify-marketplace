@@ -67,10 +67,7 @@ const FarmerForum = () => {
     queryFn: async () => {
       let query = supabase
         .from('forum_posts')
-        .select(`
-          *,
-          profiles:user_id (full_name)
-        `);
+        .select('*');
 
       if (selectedCategory !== 'all') {
         query = query.eq('category', selectedCategory);
@@ -82,25 +79,37 @@ const FarmerForum = () => {
         query = query.order('is_pinned', { ascending: false }).order('likes_count', { ascending: false });
       }
 
-      const { data, error } = await query;
+      const { data: postsData, error } = await query;
       if (error) throw error;
 
+      if (!postsData || postsData.length === 0) return [];
+
+      // Fetch profiles separately
+      const userIds = [...new Set(postsData.map(p => p.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
       // Check if user has liked each post
-      if (user && data) {
+      let likedPostIds = new Set<string>();
+      if (user) {
         const { data: likes } = await supabase
           .from('forum_likes')
           .select('post_id')
           .eq('user_id', user.id)
-          .in('post_id', data.map(p => p.id));
+          .not('post_id', 'is', null);
 
-        const likedPostIds = new Set(likes?.map(l => l.post_id));
-        return data.map(post => ({
-          ...post,
-          user_liked: likedPostIds.has(post.id)
-        }));
+        likedPostIds = new Set(likes?.map(l => l.post_id).filter(Boolean) as string[]);
       }
 
-      return data || [];
+      return postsData.map(post => ({
+        ...post,
+        profiles: profilesMap.get(post.user_id) || null,
+        user_liked: likedPostIds.has(post.id)
+      })) as ForumPost[];
     },
   });
 
@@ -109,17 +118,29 @@ const FarmerForum = () => {
     queryKey: ['forum-comments', selectedPost?.id],
     queryFn: async () => {
       if (!selectedPost) return [];
-      const { data, error } = await supabase
+      
+      const { data: commentsData, error } = await supabase
         .from('forum_comments')
-        .select(`
-          *,
-          profiles:user_id (full_name)
-        `)
+        .select('*')
         .eq('post_id', selectedPost.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      if (!commentsData || commentsData.length === 0) return [];
+
+      // Fetch profiles separately
+      const userIds = [...new Set(commentsData.map(c => c.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', userIds);
+
+      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+
+      return commentsData.map(comment => ({
+        ...comment,
+        profiles: profilesMap.get(comment.user_id) || null,
+      })) as ForumComment[];
     },
     enabled: !!selectedPost,
   });

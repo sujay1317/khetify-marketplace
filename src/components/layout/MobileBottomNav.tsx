@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout } from 'lucide-react';
+import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout, MessageSquare } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,6 +34,7 @@ const MobileBottomNav: React.FC = () => {
       return [
         { path: '/seller', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/farmer-corner', label: 'Corner', icon: Sprout },
+        { path: '/forum', label: 'Forum', icon: MessageSquare },
         { path: '/profile', label: 'Profile', icon: User },
       ];
     }
@@ -43,7 +44,7 @@ const MobileBottomNav: React.FC = () => {
       { path: '/', label: 'Home', icon: Home },
       { path: '/products', label: 'Shop', icon: Search },
       { path: '/cart', label: 'Cart', icon: ShoppingCart, badge: totalItems },
-      { path: '/wishlist', label: 'Wishlist', icon: Heart },
+      { path: '/forum', label: 'Forum', icon: MessageSquare },
       { path: '/profile', label: 'Profile', icon: User },
     ];
   };
