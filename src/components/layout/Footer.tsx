@@ -1,13 +1,13 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
 
-const Footer = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>((props, ref) => {
+const Footer = () => {
   const { t } = useLanguage();
 
   return (
-    <footer ref={ref} className="bg-primary text-primary-foreground" {...props}>
+    <footer className="bg-primary text-primary-foreground">
       {/* Main Footer */}
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
@@ -137,8 +137,6 @@ const Footer = forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>((props
       </div>
     </footer>
   );
-});
-
-Footer.displayName = 'Footer';
+};
 
 export default Footer;
