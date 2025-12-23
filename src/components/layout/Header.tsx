@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingCart, Menu, X, Search, User, Globe, Heart, LayoutDashboard, Package, Users, LogOut, Sprout, MessageSquare } from 'lucide-react';
+import { ShoppingCart, Menu, Search, User, Globe, Heart, LayoutDashboard, Package, LogOut, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage, languageNames, Language } from '@/contexts/LanguageContext';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import AppSidebar from './AppSidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +17,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { totalItems } = useCart();
@@ -35,7 +35,6 @@ const Header = () => {
     const links = [...baseNavLinks];
     
     if (!user) {
-      // Not logged in - show basic links
       return links;
     }
 
@@ -51,7 +50,6 @@ const Header = () => {
         { path: '/orders', label: t('orders') },
       );
     } else {
-      // Customer
       links.push(
         { path: '/orders', label: t('orders') },
         { path: '/wishlist', label: '❤️ Wishlist' },
@@ -62,22 +60,31 @@ const Header = () => {
   };
 
   const navLinks = getNavLinks();
-
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md group-hover:shadow-glow transition-all duration-300">
-              <span className="text-xl">🌾</span>
-            </div>
-            <span className="text-xl md:text-2xl font-bold font-heading text-primary">
-              Khetify
-            </span>
-          </Link>
+          {/* Left Side - Sidebar Toggle + Logo */}
+          <div className="flex items-center gap-2">
+            {/* Sidebar Toggle - Mobile */}
+            <AppSidebar>
+              <Button variant="ghost" size="icon" className="lg:hidden">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </AppSidebar>
+
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md group-hover:shadow-glow transition-all duration-300">
+                <span className="text-xl">🌾</span>
+              </div>
+              <span className="text-xl md:text-2xl font-bold font-heading text-primary">
+                Khetify
+              </span>
+            </Link>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
@@ -120,7 +127,7 @@ const Header = () => {
               <Search className="w-5 h-5" />
             </Button>
 
-            {/* Language Selector */}
+            {/* Language Selector - Desktop */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="hidden sm:flex">
@@ -152,7 +159,7 @@ const Header = () => {
               </Button>
             </Link>
 
-            {/* User Menu */}
+            {/* User Menu - Desktop */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -220,16 +227,6 @@ const Header = () => {
                 </Button>
               </Link>
             )}
-
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
           </div>
         </div>
 
@@ -246,76 +243,6 @@ const Header = () => {
               />
             </div>
           </div>
-        )}
-
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <nav className="lg:hidden py-4 border-t border-border animate-slide-up">
-            <div className="flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                    isActive(link.path)
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              
-              {/* Language Selector - Mobile */}
-              <div className="flex items-center gap-2 px-4 py-3">
-                <Globe className="w-5 h-5 text-muted-foreground" />
-                <div className="flex gap-2">
-                  {(Object.keys(languageNames) as Language[]).map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => setLanguage(lang)}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
-                        language === lang
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
-                    >
-                      {languageNames[lang]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {user ? (
-                <div className="space-y-2 mt-2">
-                  <div className="px-4 py-2 bg-muted/50 rounded-lg">
-                    <p className="font-medium">{profile?.full_name || 'User'}</p>
-                    <Badge variant={role === 'admin' ? 'destructive' : role === 'seller' ? 'default' : 'secondary'} className="text-xs">
-                      {role}
-                    </Badge>
-                  </div>
-                  <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" className="w-full">
-                      <User className="w-4 h-4 mr-2" />
-                      Profile
-                    </Button>
-                  </Link>
-                  <Button variant="destructive" className="w-full" onClick={() => { signOut(); setIsMenuOpen(false); }}>
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </Button>
-                </div>
-              ) : (
-                <Link to="/login" onClick={() => setIsMenuOpen(false)} className="mt-2">
-                  <Button variant="default" className="w-full">
-                    <User className="w-4 h-4 mr-2" />
-                    Login
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </nav>
         )}
       </div>
     </header>
