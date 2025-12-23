@@ -10,11 +10,14 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useCart, Product } from '@/contexts/CartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useWishlist } from '@/hooks/useWishlist';
+import ProductReviews from '@/components/product/ProductReviews';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { language, t } = useLanguage();
   const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -211,11 +214,12 @@ const ProductDetail: React.FC = () => {
 
             {/* Wishlist */}
             <Button
-              variant="glass"
+              variant={isInWishlist(product.id) ? 'default' : 'glass'}
               size="icon"
               className="absolute top-4 right-4"
+              onClick={() => toggleWishlist(product.id)}
             >
-              <Heart className="w-5 h-5" />
+              <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
             </Button>
           </div>
 
@@ -333,6 +337,12 @@ const ProductDetail: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Reviews Section */}
+        <section className="mt-16">
+          <h2 className="text-2xl font-bold font-heading mb-6">Customer Reviews</h2>
+          <ProductReviews productId={product.id} />
+        </section>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
