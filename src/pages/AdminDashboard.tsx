@@ -117,17 +117,33 @@ const AdminDashboard: React.FC = () => {
   };
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
+    // First get all user roles
+    const { data: rolesData, error: rolesError } = await supabase
       .from('user_roles')
-      .select(`
-        *,
-        profile:profiles!user_roles_user_id_fkey(full_name, phone)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      setUsers(data as unknown as UserWithRole[]);
+    if (rolesError || !rolesData) {
+      console.error('Error fetching roles:', rolesError);
+      return;
     }
+
+    // Then get all profiles
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, phone');
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    // Combine the data
+    const usersWithProfiles = rolesData.map(role => ({
+      ...role,
+      profile: profilesData?.find(p => p.user_id === role.user_id) || null
+    }));
+
+    setUsers(usersWithProfiles as unknown as UserWithRole[]);
   };
 
   const handleApproveProduct = async (id: string, approve: boolean) => {
@@ -429,7 +445,7 @@ const AdminDashboard: React.FC = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              {!product.is_approved && (
+                              {!product.is_approved ? (
                                 <>
                                   <Button size="sm" variant="outline" onClick={() => handleApproveProduct(product.id, true)}>
                                     <Check className="w-4 h-4 text-accent" />
@@ -438,6 +454,11 @@ const AdminDashboard: React.FC = () => {
                                     <X className="w-4 h-4 text-destructive" />
                                   </Button>
                                 </>
+                              ) : (
+                                <Button size="sm" variant="outline" onClick={() => handleApproveProduct(product.id, false)}>
+                                  <X className="w-4 h-4" />
+                                  <span className="ml-1">Unapprove</span>
+                                </Button>
                               )}
                             </div>
                           </TableCell>
