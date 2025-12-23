@@ -1,23 +1,154 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Star, Truck, Shield, Leaf, Minus, Plus, ShoppingCart, Heart } from 'lucide-react';
+import { ArrowLeft, Star, Truck, Shield, Leaf, Minus, Plus, ShoppingCart, Heart, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useCart } from '@/contexts/CartContext';
-import { sampleProducts } from '@/data/products';
+import { useCart, Product } from '@/contexts/CartContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { language, t } = useLanguage();
   const { addToCart } = useCart();
-  const [quantity, setQuantity] = React.useState(1);
+  const [quantity, setQuantity] = useState(1);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const product = sampleProducts.find(p => p.id === id);
+  useEffect(() => {
+    if (id) {
+      fetchProduct(id);
+    }
+  }, [id]);
+
+  const fetchProduct = async (productId: string) => {
+    setLoading(true);
+    
+    // Fetch product
+    const { data: productData, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .maybeSingle();
+
+    if (error || !productData) {
+      console.error('Error fetching product:', error);
+      setProduct(null);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch seller profile
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', productData.seller_id)
+      .maybeSingle();
+
+    const transformedProduct: Product = {
+      id: productData.id,
+      name: productData.name,
+      nameHi: productData.name_hi || productData.name,
+      nameMr: productData.name_hi || productData.name,
+      description: productData.description || '',
+      price: productData.price,
+      originalPrice: productData.original_price || undefined,
+      image: productData.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
+      category: productData.category,
+      stock: productData.stock || 0,
+      unit: productData.unit || 'kg',
+      sellerId: productData.seller_id,
+      sellerName: profileData?.full_name || 'Unknown Seller',
+      rating: 4.5,
+      reviews: Math.floor(Math.random() * 200) + 50,
+      isOrganic: productData.is_organic || false,
+      isFeatured: false,
+    };
+
+    setProduct(transformedProduct);
+
+    // Fetch related products
+    const { data: relatedData } = await supabase
+      .from('products')
+      .select('*')
+      .eq('category', productData.category)
+      .eq('is_approved', true)
+      .neq('id', productId)
+      .limit(4);
+
+    if (relatedData) {
+      const sellerIds = [...new Set(relatedData.map(p => p.seller_id))];
+      const { data: sellersData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', sellerIds);
+
+      const sellerMap: Record<string, string> = {};
+      sellersData?.forEach(s => {
+        sellerMap[s.user_id] = s.full_name || 'Unknown Seller';
+      });
+
+      setRelatedProducts(relatedData.map(p => ({
+        id: p.id,
+        name: p.name,
+        nameHi: p.name_hi || p.name,
+        nameMr: p.name_hi || p.name,
+        description: p.description || '',
+        price: p.price,
+        originalPrice: p.original_price || undefined,
+        image: p.image || 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=400&fit=crop',
+        category: p.category,
+        stock: p.stock || 0,
+        unit: p.unit || 'kg',
+        sellerId: p.seller_id,
+        sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
+        rating: 4.5,
+        reviews: Math.floor(Math.random() * 200) + 50,
+        isOrganic: p.is_organic || false,
+        isFeatured: false,
+      })));
+    }
+
+    setLoading(false);
+  };
+
+  const getLocalizedName = () => {
+    if (!product) return '';
+    switch (language) {
+      case 'hi': return product.nameHi;
+      case 'mr': return product.nameMr;
+      default: return product.name;
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addToCart(product, quantity);
+    toast.success(`${quantity} × ${product.name} added to cart!`, {
+      action: {
+        label: 'View Cart',
+        onClick: () => window.location.href = '/cart',
+      },
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-16 text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading product...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -34,31 +165,9 @@ const ProductDetail: React.FC = () => {
     );
   }
 
-  const getLocalizedName = () => {
-    switch (language) {
-      case 'hi': return product.nameHi;
-      case 'mr': return product.nameMr;
-      default: return product.name;
-    }
-  };
-
-  const handleAddToCart = () => {
-    addToCart(product, quantity);
-    toast.success(`${quantity} × ${product.name} added to cart!`, {
-      action: {
-        label: 'View Cart',
-        onClick: () => window.location.href = '/cart',
-      },
-    });
-  };
-
   const discountPercent = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
-
-  const relatedProducts = sampleProducts
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
 
   return (
     <div className="min-h-screen bg-background">
