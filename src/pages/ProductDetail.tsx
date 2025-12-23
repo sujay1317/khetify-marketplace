@@ -176,20 +176,20 @@ const ProductDetail: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container mx-auto px-4 py-6 md:py-8">
+      <main className="container mx-auto px-4 py-4 sm:py-6 md:py-8">
         {/* Breadcrumb */}
         <Link
           to="/products"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Products
         </Link>
 
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid md:grid-cols-2 gap-6 lg:gap-12">
           {/* Product Image */}
           <div className="relative">
-            <div className="aspect-square rounded-3xl overflow-hidden bg-muted">
+            <div className="aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-muted">
               <img
                 src={product.image}
                 alt={product.name}
@@ -198,7 +198,7 @@ const ProductDetail: React.FC = () => {
             </div>
             
             {/* Badges */}
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
+            <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-2">
               {product.isOrganic && (
                 <Badge variant="success" className="gap-1">
                   <Leaf className="w-3 h-3" />
@@ -216,7 +216,7 @@ const ProductDetail: React.FC = () => {
             <Button
               variant={isInWishlist(product.id) ? 'default' : 'glass'}
               size="icon"
-              className="absolute top-4 right-4"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 w-10 h-10 sm:w-12 sm:h-12"
               onClick={() => toggleWishlist(product.id)}
             >
               <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
@@ -224,24 +224,24 @@ const ProductDetail: React.FC = () => {
           </div>
 
           {/* Product Info */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Seller */}
-            <p className="text-sm text-muted-foreground uppercase tracking-wide">
+            <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wide">
               {product.sellerName}
             </p>
 
             {/* Title */}
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold font-heading">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-heading">
               {getLocalizedName()}
             </h1>
 
             {/* Rating */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
                       i < Math.floor(product.rating)
                         ? 'fill-secondary text-secondary'
                         : 'text-muted'
@@ -249,23 +249,23 @@ const ProductDetail: React.FC = () => {
                   />
                 ))}
               </div>
-              <span className="font-medium">{product.rating}</span>
-              <span className="text-muted-foreground">
+              <span className="text-sm sm:text-base font-medium">{product.rating}</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 ({product.reviews} reviews)
               </span>
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl md:text-4xl font-bold text-primary">
+            <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+              <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">
                 ₹{product.price}
               </span>
               {product.originalPrice && (
-                <span className="text-xl text-muted-foreground line-through">
+                <span className="text-lg sm:text-xl text-muted-foreground line-through">
                   ₹{product.originalPrice}
                 </span>
               )}
-              <span className="text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 / {product.unit}
               </span>
             </div>
@@ -276,25 +276,27 @@ const ProductDetail: React.FC = () => {
             </p>
 
             {/* Description */}
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
               {product.description}
             </p>
 
             {/* Quantity & Add to Cart */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex items-center border-2 border-border rounded-xl">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex items-center border-2 border-border rounded-xl self-start">
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="h-10 w-10 sm:h-12 sm:w-12"
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   disabled={quantity <= 1}
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
-                <span className="w-12 text-center font-semibold">{quantity}</span>
+                <span className="w-10 sm:w-12 text-center font-semibold">{quantity}</span>
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="h-10 w-10 sm:h-12 sm:w-12"
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                   disabled={quantity >= product.stock}
                 >
@@ -304,8 +306,8 @@ const ProductDetail: React.FC = () => {
 
               <Button
                 variant="hero"
-                size="xl"
-                className="flex-1 gap-2"
+                size="lg"
+                className="flex-1 gap-2 h-12"
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
               >
@@ -315,24 +317,24 @@ const ProductDetail: React.FC = () => {
             </div>
 
             {/* Features */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-border">
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">Free Delivery</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Free Delivery</p>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">Quality Assured</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Quality Assured</p>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Leaf className="w-6 h-6 text-primary" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground">Eco Friendly</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Eco Friendly</p>
               </div>
             </div>
           </div>

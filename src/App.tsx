@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -31,35 +32,38 @@ const App = () => (
             <Toaster />
             <Sonner position="top-center" richColors />
             <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/login" element={<Auth />} />
-                <Route path="/categories" element={<Products />} />
-                <Route path="/orders" element={<CustomerOrders />} />
-                <Route path="/profile" element={<CustomerProfile />} />
-                <Route path="/wishlist" element={<Wishlist />} />
-                <Route 
-                  path="/seller/*" 
-                  element={
-                    <ProtectedRoute allowedRoles={['seller', 'admin']}>
-                      <SellerDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/admin/*" 
-                  element={
-                    <ProtectedRoute allowedRoles={['admin']}>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="mobile-bottom-spacing">
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/product/:id" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/login" element={<Auth />} />
+                  <Route path="/categories" element={<Products />} />
+                  <Route path="/orders" element={<CustomerOrders />} />
+                  <Route path="/profile" element={<CustomerProfile />} />
+                  <Route path="/wishlist" element={<Wishlist />} />
+                  <Route 
+                    path="/seller/*" 
+                    element={
+                      <ProtectedRoute allowedRoles={['seller', 'admin']}>
+                        <SellerDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/*" 
+                    element={
+                      <ProtectedRoute allowedRoles={['admin']}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
+              <MobileBottomNav />
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>
