@@ -43,7 +43,7 @@ const MobileBottomNav: React.FC = () => {
       { path: '/', label: 'Home', icon: Home },
       { path: '/products', label: 'Shop', icon: Search },
       { path: '/cart', label: 'Cart', icon: ShoppingCart, badge: totalItems },
-      { path: '/wishlist', label: 'Wishlist', icon: Heart },
+      { path: '/farmer-corner', label: 'Farmers', icon: Sprout },
       { path: '/profile', label: 'Profile', icon: User },
     ];
   };
