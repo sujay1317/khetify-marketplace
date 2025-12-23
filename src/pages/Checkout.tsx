@@ -8,14 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const Checkout: React.FC = () => {
   const { t, language } = useLanguage();
   const { items, totalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('upi');
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: '',
@@ -27,7 +32,8 @@ const Checkout: React.FC = () => {
   });
 
   const deliveryFee = totalPrice >= 500 ? 0 : 50;
-  const finalTotal = totalPrice + deliveryFee;
+  const codFee = paymentMethod === 'cod' ? 20 : 0;
+  const finalTotal = totalPrice + deliveryFee + codFee;
 
   const getLocalizedName = (product: typeof items[0]['product']) => {
     switch (language) {
@@ -47,12 +53,64 @@ const Checkout: React.FC = () => {
   };
 
   const handlePayment = async () => {
+    if (!user) {
+      toast.error('Please login to place order');
+      navigate('/login');
+      return;
+    }
+
     setIsProcessing(true);
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsProcessing(false);
-    setStep('success');
-    clearCart();
+    
+    try {
+      // Create order in database
+      const { data: orderData, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          customer_id: user.id,
+          total: finalTotal,
+          payment_method: paymentMethod,
+          shipping_address: shippingInfo,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: orderData.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+        seller_id: item.product.sellerId
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Update product stock
+      for (const item of items) {
+        await supabase
+          .from('products')
+          .update({ stock: Math.max(0, item.product.stock - item.quantity) })
+          .eq('id', item.product.id);
+      }
+
+      setOrderId(orderData.id);
+      setStep('success');
+      clearCart();
+      toast.success('Order placed successfully!');
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast.error('Failed to place order. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0 && step !== 'success') {
@@ -84,7 +142,7 @@ const Checkout: React.FC = () => {
               Thank you for your order. Your order ID is:
             </p>
             <p className="text-xl font-mono font-bold text-primary mb-6">
-              #KHT{Date.now().toString().slice(-8)}
+              #{orderId.slice(0, 8).toUpperCase()}
             </p>
             <p className="text-sm text-muted-foreground mb-8">
               You will receive an SMS confirmation shortly with tracking details.
@@ -120,6 +178,15 @@ const Checkout: React.FC = () => {
         <h1 className="text-2xl md:text-3xl font-bold font-heading mb-6">
           {t('checkout')}
         </h1>
+
+        {/* Login Prompt */}
+        {!user && (
+          <Card className="p-4 mb-6 border-secondary bg-secondary/10">
+            <p className="text-sm">
+              ⚠️ Please <Link to="/login" className="text-primary font-semibold underline">login</Link> to place your order and track it later.
+            </p>
+          </Card>
+        )}
 
         {/* Progress Steps */}
         <div className="flex items-center gap-4 mb-8">
@@ -243,12 +310,16 @@ const Checkout: React.FC = () => {
                   ].map((option) => (
                     <label
                       key={option.id}
-                      className="flex items-center gap-4 p-4 border-2 border-border rounded-xl cursor-pointer hover:border-primary transition-colors"
+                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
+                        paymentMethod === option.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary'
+                      }`}
                     >
                       <input
                         type="radio"
                         name="payment"
-                        defaultChecked={option.id === 'upi'}
+                        value={option.id}
+                        checked={paymentMethod === option.id}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
                         className="w-5 h-5 text-primary"
                       />
                       <span className="text-2xl">{option.icon}</span>
@@ -269,7 +340,7 @@ const Checkout: React.FC = () => {
                     size="lg"
                     className="flex-1"
                     onClick={handlePayment}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !user}
                   >
                     {isProcessing ? 'Processing...' : `Pay ₹${finalTotal}`}
                   </Button>
@@ -292,7 +363,9 @@ const Checkout: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium line-clamp-1">{getLocalizedName(item.product)}</p>
-                      <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Qty: {item.quantity} • {item.product.sellerName}
+                      </p>
                     </div>
                     <p className="text-sm font-medium">₹{item.product.price * item.quantity}</p>
                   </div>
@@ -310,6 +383,12 @@ const Checkout: React.FC = () => {
                     {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
                   </span>
                 </div>
+                {codFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">COD Charges</span>
+                    <span>₹{codFee}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
                   <span>{t('total')}</span>
                   <span className="text-primary">₹{finalTotal}</span>
