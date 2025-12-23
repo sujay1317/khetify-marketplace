@@ -116,10 +116,10 @@ const Header = () => {
             </Link>
 
             {/* User */}
-            <Link to="/login">
+            <Link to="/profile">
               <Button variant="soft" size="sm" className="hidden sm:flex gap-2">
                 <User className="w-4 h-4" />
-                {t('login')}
+                Profile
               </Button>
             </Link>
 
@@ -190,13 +190,13 @@ const Header = () => {
               </div>
 
               <Link
-                to="/login"
+                to="/profile"
                 onClick={() => setIsMenuOpen(false)}
                 className="mt-2"
               >
                 <Button variant="default" className="w-full">
                   <User className="w-4 h-4 mr-2" />
-                  {t('login')}
+                  Profile
                 </Button>
               </Link>
             </div>
