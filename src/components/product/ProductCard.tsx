@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Leaf } from 'lucide-react';
+import { ShoppingCart, Star, Leaf, GitCompare, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Product, useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCompare } from '@/contexts/CompareContext';
 import { toast } from 'sonner';
 
 interface ProductCardProps {
@@ -15,6 +16,9 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { language, t } = useLanguage();
+  const { addToCompare, removeFromCompare, isInCompare, maxProducts, compareList } = useCompare();
+
+  const inCompare = isInCompare(product.id);
 
   const getLocalizedName = () => {
     switch (language) {
@@ -38,6 +42,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         onClick: () => window.location.href = '/cart',
       },
     });
+  };
+
+  const handleCompareToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (inCompare) {
+      removeFromCompare(product.id);
+      toast.info(`${product.name} removed from compare`);
+    } else {
+      if (compareList.length >= maxProducts) {
+        toast.error(`You can compare up to ${maxProducts} products only`);
+        return;
+      }
+      addToCompare({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        original_price: product.originalPrice,
+        image: product.image,
+        category: product.category,
+        unit: product.unit,
+        is_organic: product.isOrganic,
+        description: product.description,
+      });
+      toast.success(`${product.name} added to compare`);
+    }
   };
 
   const discountPercent = product.originalPrice
@@ -71,6 +102,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </Badge>
             )}
           </div>
+
+          {/* Compare Button - Top right */}
+          <Button
+            variant={inCompare ? "default" : "glass"}
+            size="icon"
+            className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 ${inCompare ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-all duration-300`}
+            onClick={handleCompareToggle}
+          >
+            {inCompare ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <GitCompare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+          </Button>
 
           {/* Quick Add Button - Hidden on mobile, shown on hover for desktop */}
           <Button
