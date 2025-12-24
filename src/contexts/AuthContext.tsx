@@ -20,8 +20,6 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, phone: string, role: AppRole) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithEmailOtp: (email: string) => Promise<{ error: Error | null }>;
-  verifyEmailOtp: (email: string, token: string, fullName?: string, phone?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -126,56 +124,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { error: error as Error | null };
   };
 
-  const signInWithEmailOtp = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email,
-      options: {
-        shouldCreateUser: true,
-      }
-    });
-
-    return { error: error as Error | null };
-  };
-
-  const verifyEmailOtp = async (email: string, token: string, fullName?: string, phone?: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      email: email,
-      token,
-      type: 'email',
-    });
-
-    if (error) {
-      return { error: error as Error };
-    }
-
-    // If this is a new user (signup), update their profile
-    if (data.user && fullName) {
-      // Check if profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      if (!existingProfile) {
-        // Create profile for new OTP user
-        await supabase.from('profiles').insert({
-          user_id: data.user.id,
-          full_name: fullName,
-          phone: phone || null,
-        });
-
-        // Create customer role
-        await supabase.from('user_roles').insert({
-          user_id: data.user.id,
-          role: 'customer',
-        });
-      }
-    }
-
-    return { error: null };
-  };
-
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -193,8 +141,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       loading,
       signUp,
       signIn,
-      signInWithEmailOtp,
-      verifyEmailOtp,
       signOut
     }}>
       {children}
