@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Smartphone } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,7 @@ type AuthMode = 'customer' | 'seller';
 
 const Auth: React.FC = () => {
   const { t } = useLanguage();
-  const { user, role, signIn, signUp, signInWithOtp, verifyOtp } = useAuth();
+  const { user, role, signIn, signUp, signInWithEmailOtp, verifyEmailOtp } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
@@ -42,8 +42,9 @@ const Auth: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<AppRole>('seller');
 
   // OTP fields (for customer)
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
 
@@ -91,8 +92,8 @@ const Auth: React.FC = () => {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!customerPhone || customerPhone.length < 10) {
-      toast.error('Please enter a valid 10-digit phone number');
+    if (!customerEmail || !customerEmail.includes('@')) {
+      toast.error('Please enter a valid email address');
       return;
     }
 
@@ -103,12 +104,12 @@ const Auth: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await signInWithOtp(customerPhone);
+      const { error } = await signInWithEmailOtp(customerEmail);
       if (error) {
         toast.error(error.message);
       } else {
         setOtpSent(true);
-        toast.success('OTP sent to your phone!');
+        toast.success('OTP sent to your email!');
       }
     } catch (err) {
       toast.error('Failed to send OTP. Please try again.');
@@ -128,10 +129,11 @@ const Auth: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await verifyOtp(
-        customerPhone, 
+      const { error } = await verifyEmailOtp(
+        customerEmail, 
         otp, 
-        !isLogin ? customerName : undefined
+        !isLogin ? customerName : undefined,
+        !isLogin ? customerPhone : undefined
       );
       if (error) {
         toast.error(error.message);
@@ -170,47 +172,53 @@ const Auth: React.FC = () => {
           <Tabs value={authMode} onValueChange={(v) => { setAuthMode(v as AuthMode); resetOtpState(); }} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="customer" className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4" />
+                <Mail className="w-4 h-4" />
                 Customer
               </TabsTrigger>
               <TabsTrigger value="seller" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
+                <Lock className="w-4 h-4" />
                 Seller/Admin
               </TabsTrigger>
             </TabsList>
 
-            {/* Customer OTP Authentication */}
+            {/* Customer Email OTP Authentication */}
             <TabsContent value="customer">
               {!otpSent ? (
                 <form onSubmit={handleSendOtp} className="space-y-4">
                   {!isLogin && (
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input 
-                        placeholder="Full Name" 
-                        className="pl-10" 
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        required 
-                      />
-                    </div>
+                    <>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input 
+                          placeholder="Full Name" 
+                          className="pl-10" 
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <Input 
+                          type="tel"
+                          placeholder="Phone Number (optional)" 
+                          className="pl-10" 
+                          value={customerPhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                        />
+                      </div>
+                    </>
                   )}
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <div className="flex">
-                      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">
-                        +91
-                      </span>
-                      <Input 
-                        type="tel" 
-                        placeholder="10-digit mobile number"
-                        className="rounded-l-none"
-                        value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                        maxLength={10}
-                        required 
-                      />
-                    </div>
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input 
+                      type="email" 
+                      placeholder="Email Address"
+                      className="pl-10"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      required 
+                    />
                   </div>
 
                   <Button type="submit" variant="default" size="lg" className="w-full" disabled={isLoading}>
@@ -218,7 +226,7 @@ const Auth: React.FC = () => {
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    We'll send a 6-digit OTP to your phone number
+                    We'll send a 6-digit OTP to your email - No password needed!
                   </p>
                 </form>
               ) : (
@@ -226,7 +234,7 @@ const Auth: React.FC = () => {
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-4">
                       Enter the 6-digit OTP sent to <br />
-                      <span className="font-medium text-foreground">+91 {customerPhone}</span>
+                      <span className="font-medium text-foreground">{customerEmail}</span>
                     </p>
                     <div className="flex justify-center">
                       <InputOTP
@@ -256,7 +264,7 @@ const Auth: React.FC = () => {
                       onClick={resetOtpState}
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      Change number
+                      Change email
                     </button>
                     <button
                       type="button"
