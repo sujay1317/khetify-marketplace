@@ -29,6 +29,31 @@ const ProductDetail: React.FC = () => {
     }
   }, [id]);
 
+  // Real-time stock updates subscription
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`product-${id}-realtime`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'products',
+          filter: `id=eq.${id}`
+        },
+        (payload) => {
+          setProduct(prev => prev ? { ...prev, stock: payload.new.stock } : prev);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id]);
+
   const fetchProduct = async (productId: string) => {
     setLoading(true);
     
@@ -53,6 +78,19 @@ const ProductDetail: React.FC = () => {
       .eq('user_id', productData.seller_id)
       .maybeSingle();
 
+    // Fetch reviews for this product to calculate rating
+    const { data: reviewsData } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('product_id', productId);
+
+    let avgRating = 0;
+    let reviewCount = 0;
+    if (reviewsData && reviewsData.length > 0) {
+      reviewCount = reviewsData.length;
+      avgRating = reviewsData.reduce((sum, r) => sum + r.rating, 0) / reviewCount;
+    }
+
     const transformedProduct: Product = {
       id: productData.id,
       name: productData.name,
@@ -67,8 +105,8 @@ const ProductDetail: React.FC = () => {
       unit: productData.unit || 'kg',
       sellerId: productData.seller_id,
       sellerName: profileData?.full_name || 'Unknown Seller',
-      rating: 4.5,
-      reviews: Math.floor(Math.random() * 200) + 50,
+      rating: avgRating,
+      reviews: reviewCount,
       isOrganic: productData.is_organic || false,
       isFeatured: false,
     };
@@ -96,6 +134,25 @@ const ProductDetail: React.FC = () => {
         sellerMap[s.user_id] = s.full_name || 'Unknown Seller';
       });
 
+      // Fetch reviews for related products
+      const relatedIds = relatedData.map(p => p.id);
+      const { data: relatedReviewsData } = await supabase
+        .from('reviews')
+        .select('product_id, rating')
+        .in('product_id', relatedIds);
+
+      const ratingsMap: Record<string, { avg: number; count: number }> = {};
+      relatedReviewsData?.forEach((review: { product_id: string; rating: number }) => {
+        if (!ratingsMap[review.product_id]) {
+          ratingsMap[review.product_id] = { avg: 0, count: 0 };
+        }
+        ratingsMap[review.product_id].count += 1;
+        ratingsMap[review.product_id].avg += review.rating;
+      });
+      Object.keys(ratingsMap).forEach(pid => {
+        ratingsMap[pid].avg = ratingsMap[pid].avg / ratingsMap[pid].count;
+      });
+
       setRelatedProducts(relatedData.map(p => ({
         id: p.id,
         name: p.name,
@@ -110,8 +167,8 @@ const ProductDetail: React.FC = () => {
         unit: p.unit || 'kg',
         sellerId: p.seller_id,
         sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
-        rating: 4.5,
-        reviews: Math.floor(Math.random() * 200) + 50,
+        rating: ratingsMap[p.id]?.avg || 0,
+        reviews: ratingsMap[p.id]?.count || 0,
         isOrganic: p.is_organic || false,
         isFeatured: false,
       })));
