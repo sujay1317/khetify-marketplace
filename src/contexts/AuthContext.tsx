@@ -20,6 +20,8 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, phone: string, role: AppRole) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithOtp: (phone: string) => Promise<{ error: Error | null }>;
+  verifyOtp: (phone: string, token: string, fullName?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -124,6 +126,58 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return { error: error as Error | null };
   };
 
+  const signInWithOtp = async (phone: string) => {
+    // Format phone number for India (add +91 if not present)
+    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^0/, '')}`;
+    
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: formattedPhone,
+    });
+
+    return { error: error as Error | null };
+  };
+
+  const verifyOtp = async (phone: string, token: string, fullName?: string) => {
+    const formattedPhone = phone.startsWith('+') ? phone : `+91${phone.replace(/^0/, '')}`;
+    
+    const { data, error } = await supabase.auth.verifyOtp({
+      phone: formattedPhone,
+      token,
+      type: 'sms',
+    });
+
+    if (error) {
+      return { error: error as Error };
+    }
+
+    // If this is a new user (signup), update their profile with full name
+    if (data.user && fullName) {
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', data.user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        // Create profile for new OTP user
+        await supabase.from('profiles').insert({
+          user_id: data.user.id,
+          full_name: fullName,
+          phone: formattedPhone,
+        });
+
+        // Create customer role
+        await supabase.from('user_roles').insert({
+          user_id: data.user.id,
+          role: 'customer',
+        });
+      }
+    }
+
+    return { error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -141,6 +195,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       loading,
       signUp,
       signIn,
+      signInWithOtp,
+      verifyOtp,
       signOut
     }}>
       {children}
