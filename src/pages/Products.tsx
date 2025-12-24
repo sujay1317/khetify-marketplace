@@ -65,6 +65,32 @@ const Products: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
+
+    // Subscribe to real-time stock updates
+    const channel = supabase
+      .channel('products-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'products'
+        },
+        (payload) => {
+          // Update the product in state when stock changes
+          setProducts(prev => prev.map(p => {
+            if (p.id === payload.new.id) {
+              return { ...p, stock: payload.new.stock };
+            }
+            return p;
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchProducts = async () => {
@@ -101,12 +127,34 @@ const Products: React.FC = () => {
       sellerMap[profile.user_id] = profile.full_name || 'Unknown Seller';
     });
 
+    // Fetch average ratings for all products
+    const productIds = productsData.map(p => p.id);
+    const { data: reviewsData } = await supabase
+      .from('reviews')
+      .select('product_id, rating')
+      .in('product_id', productIds);
+
+    // Calculate average ratings and review counts
+    const ratingsMap: Record<string, { avg: number; count: number }> = {};
+    reviewsData?.forEach((review: { product_id: string; rating: number }) => {
+      if (!ratingsMap[review.product_id]) {
+        ratingsMap[review.product_id] = { avg: 0, count: 0 };
+      }
+      ratingsMap[review.product_id].count += 1;
+      ratingsMap[review.product_id].avg += review.rating;
+    });
+
+    // Finalize averages
+    Object.keys(ratingsMap).forEach(productId => {
+      ratingsMap[productId].avg = ratingsMap[productId].avg / ratingsMap[productId].count;
+    });
+
     // Transform DB products to frontend Product type
     const transformedProducts: Product[] = productsData.map((p: DBProduct) => ({
       id: p.id,
       name: p.name,
       nameHi: p.name_hi || p.name,
-      nameMr: p.name_hi || p.name, // Fallback to Hindi or English
+      nameMr: p.name_hi || p.name,
       description: p.description || '',
       price: p.price,
       originalPrice: p.original_price || undefined,
@@ -116,8 +164,8 @@ const Products: React.FC = () => {
       unit: p.unit || 'kg',
       sellerId: p.seller_id,
       sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
-      rating: 4.5, // Default rating since not stored in DB
-      reviews: Math.floor(Math.random() * 200) + 50, // Placeholder
+      rating: ratingsMap[p.id]?.avg || 0,
+      reviews: ratingsMap[p.id]?.count || 0,
       isOrganic: p.is_organic || false,
       isFeatured: false,
     }));
