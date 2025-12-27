@@ -11,12 +11,14 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useSound } from '@/hooks/useSound';
 
 const Checkout: React.FC = () => {
   const { t, language } = useLanguage();
   const { items, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const { playPurchase } = useSound();
   const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
@@ -100,6 +102,23 @@ const Checkout: React.FC = () => {
           .update({ stock: Math.max(0, item.product.stock - item.quantity) })
           .eq('id', item.product.id);
       }
+
+      // Trigger notifications for sellers and admins
+      try {
+        await supabase.functions.invoke('create-order-notifications', {
+          body: {
+            orderId: orderData.id,
+            customerName: profile?.full_name || shippingInfo.fullName,
+            total: finalTotal,
+            items: orderItems,
+          },
+        });
+      } catch (notifError) {
+        console.log('Notification error (non-blocking):', notifError);
+      }
+
+      // Play purchase sound
+      playPurchase();
 
       setOrderId(orderData.id);
       setStep('success');

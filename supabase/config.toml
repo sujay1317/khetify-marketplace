@@ -1,1 +1,7 @@
 project_id = "rnnipawqtzbhtgrlajmc"
+
+[functions.create-seller]
+verify_jwt = true
+
+[functions.create-order-notifications]
+verify_jwt = false
