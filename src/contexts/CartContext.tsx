@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useSound } from '@/hooks/useSound';
 
 export interface Product {
   id: string;
@@ -39,8 +40,10 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { playAddToCart } = useSound();
 
   const addToCart = (product: Product, quantity = 1) => {
+    playAddToCart();
     setItems(prev => {
       const existingItem = prev.find(item => item.product.id === product.id);
       if (existingItem) {

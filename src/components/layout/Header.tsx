@@ -8,6 +8,7 @@ import { useLanguage, languageNames, Language } from '@/contexts/LanguageContext
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from './AppSidebar';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -146,6 +147,9 @@ const Header = () => {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* Cart */}
             <Link to="/cart">
