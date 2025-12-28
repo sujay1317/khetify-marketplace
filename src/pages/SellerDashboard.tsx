@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, ShoppingCart, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, LayoutDashboard } from 'lucide-react';
+import { Package, ShoppingCart, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, LayoutDashboard, Upload, X } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -61,6 +61,10 @@ const SellerDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -113,9 +117,59 @@ const SellerDashboard: React.FC = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image must be less than 5MB');
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile || !user) return formData.image || null;
+
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+    setUploading(true);
+    const { error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(fileName, imageFile);
+
+    setUploading(false);
+
+    if (uploadError) {
+      toast.error('Failed to upload image');
+      console.error('Upload error:', uploadError);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    // Upload image first if there's a new file
+    const imageUrl = await uploadImage();
 
     const productData = {
       seller_id: user.id,
@@ -125,7 +179,7 @@ const SellerDashboard: React.FC = () => {
       original_price: formData.original_price ? parseFloat(formData.original_price) : null,
       unit: formData.unit,
       category: formData.category,
-      image: formData.image || null,
+      image: imageUrl,
       is_organic: formData.is_organic,
       stock: parseInt(formData.stock) || 0
     };
@@ -173,6 +227,8 @@ const SellerDashboard: React.FC = () => {
       is_organic: product.is_organic || false,
       stock: product.stock?.toString() || ''
     });
+    setImageFile(null);
+    setImagePreview(null);
     setIsAddModalOpen(true);
   };
 
@@ -204,6 +260,11 @@ const SellerDashboard: React.FC = () => {
       is_organic: false,
       stock: ''
     });
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleLogout = async () => {
@@ -452,12 +513,41 @@ const SellerDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Image URL</label>
-                          <Input
-                            value={formData.image}
-                            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                            placeholder="https://..."
-                          />
+                          <label className="text-sm font-medium">Product Image</label>
+                          <div className="mt-2">
+                            {(imagePreview || formData.image) ? (
+                              <div className="relative inline-block">
+                                <img
+                                  src={imagePreview || formData.image}
+                                  alt="Product preview"
+                                  className="w-32 h-32 object-cover rounded-lg border"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={clearImage}
+                                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ) : (
+                              <div
+                                onClick={() => fileInputRef.current?.click()}
+                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                              >
+                                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">Click to upload image</p>
+                                <p className="text-xs text-muted-foreground mt-1">Max 5MB</p>
+                              </div>
+                            )}
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Checkbox
@@ -467,8 +557,8 @@ const SellerDashboard: React.FC = () => {
                           />
                           <label htmlFor="organic" className="text-sm">Organic Product</label>
                         </div>
-                        <Button type="submit" className="w-full">
-                          {editingProduct ? 'Update Product' : 'Add Product'}
+                        <Button type="submit" className="w-full" disabled={uploading}>
+                          {uploading ? 'Uploading...' : editingProduct ? 'Update Product' : 'Add Product'}
                         </Button>
                       </form>
                     </DialogContent>
