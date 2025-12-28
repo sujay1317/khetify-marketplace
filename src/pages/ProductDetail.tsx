@@ -414,6 +414,17 @@ const ProductDetail: React.FC = () => {
               </Button>
             </div>
 
+            {/* View All Seller Products Button */}
+            <Link to={`/store/${product.sellerId}`} className="block">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full gap-2 h-12"
+              >
+                View All Products from {product.sellerName}
+              </Button>
+            </Link>
+
             {/* Features */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-border">
               <div className="text-center">
