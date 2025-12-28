@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Truck, Shield, Headphones, Leaf } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -7,11 +7,64 @@ import ProductCard from '@/components/product/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { sampleProducts, categories } from '@/data/products';
+import { categories } from '@/data/products';
+import { supabase } from '@/integrations/supabase/client';
+import { Product } from '@/contexts/CartContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index: React.FC = () => {
   const { t, language } = useLanguage();
-  const featuredProducts = sampleProducts.filter(p => p.isFeatured).slice(0, 4);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_approved', true)
+        .limit(8);
+
+      if (!error && data) {
+        const products: Product[] = data.map((p) => ({
+          id: p.id,
+          name: p.name,
+          nameHi: p.name_hi || '',
+          nameMr: '',
+          description: p.description || '',
+          price: p.price,
+          originalPrice: p.original_price || undefined,
+          image: p.image || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=400&fit=crop',
+          category: p.category,
+          stock: p.stock || 0,
+          unit: p.unit || 'kg',
+          sellerId: p.seller_id,
+          sellerName: '',
+          rating: 0,
+          reviews: 0,
+          isOrganic: p.is_organic || false,
+        }));
+        setFeaturedProducts(products);
+      }
+      setLoading(false);
+    };
+
+    fetchProducts();
+
+    // Real-time subscription for product updates
+    const channel = supabase
+      .channel('homepage-products')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'products' },
+        () => fetchProducts()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const getCategoryName = (cat: typeof categories[0]) => {
     switch (language) {
@@ -119,11 +172,27 @@ const Index: React.FC = () => {
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="p-4 space-y-3">
+                  <Skeleton className="h-40 w-full rounded-lg" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </Card>
+              ))}
+            </div>
+          ) : featuredProducts.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">No products available yet. Check back soon!</p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
