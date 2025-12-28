@@ -22,6 +22,8 @@ const ProductDetail: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -112,6 +114,24 @@ const ProductDetail: React.FC = () => {
     };
 
     setProduct(transformedProduct);
+
+    // Fetch gallery images
+    const { data: galleryData } = await supabase
+      .from('product_images')
+      .select('image_url')
+      .eq('product_id', productId)
+      .order('display_order');
+
+    const images = [transformedProduct.image];
+    if (galleryData) {
+      galleryData.forEach(g => {
+        if (!images.includes(g.image_url)) {
+          images.push(g.image_url);
+        }
+      });
+    }
+    setGalleryImages(images);
+    setSelectedImageIndex(0);
 
     // Fetch related products
     const { data: relatedData } = await supabase
@@ -244,15 +264,32 @@ const ProductDetail: React.FC = () => {
         </Link>
 
         <div className="grid md:grid-cols-2 gap-6 lg:gap-12">
-          {/* Product Image */}
-          <div className="relative">
+          {/* Product Image Gallery */}
+          <div className="relative space-y-3">
             <div className="aspect-square rounded-2xl sm:rounded-3xl overflow-hidden bg-muted">
               <img
-                src={product.image}
+                src={galleryImages[selectedImageIndex] || product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
+            
+            {/* Thumbnail Gallery */}
+            {galleryImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {galleryImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImageIndex === index ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    <img src={img} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
             
             {/* Badges */}
             <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex flex-col gap-2">

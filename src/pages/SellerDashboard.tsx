@@ -61,8 +61,9 @@ const SellerDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<{id: string, image_url: string}[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -118,58 +119,100 @@ const SellerDashboard: React.FC = () => {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    const validFiles: File[] = [];
+    const previews: string[] = [];
+    
+    for (const file of files) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be less than 5MB');
-        return;
+        toast.error(`${file.name} is too large (max 5MB)`);
+        continue;
       }
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      if (imageFiles.length + imagePreviews.length + existingImages.length + validFiles.length >= 5) {
+        toast.error('Maximum 5 images allowed');
+        break;
+      }
+      validFiles.push(file);
+      previews.push(URL.createObjectURL(file));
+    }
+    
+    setImageFiles([...imageFiles, ...validFiles]);
+    setImagePreviews([...imagePreviews, ...previews]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeNewImage = (index: number) => {
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = async (imageId: string) => {
+    const { error } = await supabase
+      .from('product_images')
+      .delete()
+      .eq('id', imageId);
+    
+    if (error) {
+      toast.error('Failed to remove image');
+    } else {
+      setExistingImages(existingImages.filter(img => img.id !== imageId));
     }
   };
 
-  const clearImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  const clearAllImages = () => {
+    setImageFiles([]);
+    setImagePreviews([]);
     setFormData({ ...formData, image: '' });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile || !user) return formData.image || null;
-
-    const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
+  const uploadImages = async (productId: string): Promise<string | null> => {
+    if (!user) return formData.image || null;
+    
     setUploading(true);
-    const { error: uploadError } = await supabase.storage
-      .from('product-images')
-      .upload(fileName, imageFile);
+    let mainImageUrl: string | null = formData.image || null;
+    
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}-${i}.${fileExt}`;
 
-    setUploading(false);
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file);
 
-    if (uploadError) {
-      toast.error('Failed to upload image');
-      console.error('Upload error:', uploadError);
-      return null;
+      if (uploadError) {
+        toast.error(`Failed to upload ${file.name}`);
+        console.error('Upload error:', uploadError);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      // First image becomes the main product image
+      if (i === 0 && !mainImageUrl) {
+        mainImageUrl = publicUrl;
+      }
+
+      // Save to product_images table
+      await supabase.from('product_images').insert({
+        product_id: productId,
+        image_url: publicUrl,
+        display_order: existingImages.length + i
+      });
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
+    setUploading(false);
+    return mainImageUrl;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
-    // Upload image first if there's a new file
-    const imageUrl = await uploadImage();
 
     const productData = {
       seller_id: user.id,
@@ -179,12 +222,20 @@ const SellerDashboard: React.FC = () => {
       original_price: formData.original_price ? parseFloat(formData.original_price) : null,
       unit: formData.unit,
       category: formData.category,
-      image: imageUrl,
+      image: formData.image || null,
       is_organic: formData.is_organic,
       stock: parseInt(formData.stock) || 0
     };
 
     if (editingProduct) {
+      // Upload new images first
+      if (imageFiles.length > 0) {
+        const mainImage = await uploadImages(editingProduct.id);
+        if (mainImage && !productData.image) {
+          productData.image = mainImage;
+        }
+      }
+
       const { error } = await supabase
         .from('products')
         .update(productData)
@@ -197,13 +248,22 @@ const SellerDashboard: React.FC = () => {
         fetchProducts();
       }
     } else {
-      const { error } = await supabase
+      const { data: newProduct, error } = await supabase
         .from('products')
-        .insert(productData);
+        .insert(productData)
+        .select()
+        .single();
 
       if (error) {
         toast.error('Failed to add product');
       } else {
+        // Upload images after product is created
+        if (imageFiles.length > 0 && newProduct) {
+          const mainImage = await uploadImages(newProduct.id);
+          if (mainImage) {
+            await supabase.from('products').update({ image: mainImage }).eq('id', newProduct.id);
+          }
+        }
         toast.success('Product added successfully');
         fetchProducts();
       }
@@ -214,7 +274,7 @@ const SellerDashboard: React.FC = () => {
     setEditingProduct(null);
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -227,8 +287,17 @@ const SellerDashboard: React.FC = () => {
       is_organic: product.is_organic || false,
       stock: product.stock?.toString() || ''
     });
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFiles([]);
+    setImagePreviews([]);
+    
+    // Fetch existing gallery images
+    const { data: galleryImages } = await supabase
+      .from('product_images')
+      .select('id, image_url')
+      .eq('product_id', product.id)
+      .order('display_order');
+    
+    setExistingImages(galleryImages || []);
     setIsAddModalOpen(true);
   };
 
@@ -260,8 +329,9 @@ const SellerDashboard: React.FC = () => {
       is_organic: false,
       stock: ''
     });
-    setImageFile(null);
-    setImagePreview(null);
+    setImageFiles([]);
+    setImagePreviews([]);
+    setExistingImages([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -513,37 +583,62 @@ const SellerDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Product Image</label>
-                          <div className="mt-2">
-                            {(imagePreview || formData.image) ? (
-                              <div className="relative inline-block">
-                                <img
-                                  src={imagePreview || formData.image}
-                                  alt="Product preview"
-                                  className="w-32 h-32 object-cover rounded-lg border"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={clearImage}
-                                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
+                          <label className="text-sm font-medium">Product Images (up to 5)</label>
+                          <div className="mt-2 space-y-3">
+                            {/* Gallery preview */}
+                            {(existingImages.length > 0 || imagePreviews.length > 0) && (
+                              <div className="flex flex-wrap gap-2">
+                                {existingImages.map((img) => (
+                                  <div key={img.id} className="relative">
+                                    <img
+                                      src={img.image_url}
+                                      alt="Product"
+                                      className="w-20 h-20 object-cover rounded-lg border"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeExistingImage(img.id)}
+                                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
+                                {imagePreviews.map((preview, index) => (
+                                  <div key={`new-${index}`} className="relative">
+                                    <img
+                                      src={preview}
+                                      alt="New upload"
+                                      className="w-20 h-20 object-cover rounded-lg border border-primary"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeNewImage(index)}
+                                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ))}
                               </div>
-                            ) : (
+                            )}
+                            
+                            {/* Upload button */}
+                            {existingImages.length + imagePreviews.length < 5 && (
                               <div
                                 onClick={() => fileInputRef.current?.click()}
-                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                                className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
                               >
-                                <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">Click to upload image</p>
-                                <p className="text-xs text-muted-foreground mt-1">Max 5MB</p>
+                                <Upload className="w-6 h-6 mx-auto text-muted-foreground mb-1" />
+                                <p className="text-sm text-muted-foreground">Add images</p>
+                                <p className="text-xs text-muted-foreground">Max 5MB each</p>
                               </div>
                             )}
                             <input
                               ref={fileInputRef}
                               type="file"
                               accept="image/*"
+                              multiple
                               onChange={handleImageChange}
                               className="hidden"
                             />
