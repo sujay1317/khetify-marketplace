@@ -434,8 +434,10 @@ const SellerDashboard: React.FC = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="kg">Per Kg</SelectItem>
-                                <SelectItem value="piece">Per Piece</SelectItem>
+                                <SelectItem value="gram">Per Gram</SelectItem>
+                                <SelectItem value="ml">Per ML</SelectItem>
                                 <SelectItem value="liter">Per Liter</SelectItem>
+                                <SelectItem value="piece">Per Piece</SelectItem>
                                 <SelectItem value="pack">Per Pack</SelectItem>
                               </SelectContent>
                             </Select>
