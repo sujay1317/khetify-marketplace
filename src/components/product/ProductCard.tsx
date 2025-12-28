@@ -127,9 +127,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Content */}
         <div className="p-2.5 sm:p-4">
           {/* Seller Name */}
-          <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide mb-0.5 sm:mb-1 truncate">
+          <Link
+            to={`/store/${product.sellerId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide mb-0.5 sm:mb-1 truncate block hover:text-primary transition-colors"
+          >
             {product.sellerName}
-          </p>
+          </Link>
 
           {/* Title */}
           <h3 className="font-semibold text-sm sm:text-base text-foreground line-clamp-2 mb-1.5 sm:mb-2 group-hover:text-primary transition-colors leading-tight">

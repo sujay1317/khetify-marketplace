@@ -320,9 +320,13 @@ const ProductDetail: React.FC = () => {
           {/* Product Info */}
           <div className="space-y-4 sm:space-y-6">
             {/* Seller */}
-            <p className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wide">
+            <Link 
+              to={`/store/${product.sellerId}`}
+              className="text-xs sm:text-sm text-muted-foreground uppercase tracking-wide hover:text-primary transition-colors inline-flex items-center gap-1"
+            >
               {product.sellerName}
-            </p>
+              <span className="text-[10px]">→ View Store</span>
+            </Link>
 
             {/* Title */}
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold font-heading">
