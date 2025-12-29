@@ -25,6 +25,7 @@ const MobileBottomNav: React.FC = () => {
     if (role === 'admin') {
       return [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/sellers', label: 'Sellers', icon: Store },
         { path: '/products', label: 'Products', icon: Package },
         { path: '/profile', label: 'Profile', icon: User },
       ];
@@ -33,7 +34,7 @@ const MobileBottomNav: React.FC = () => {
     if (role === 'seller') {
       return [
         { path: '/seller', label: 'Dashboard', icon: LayoutDashboard },
-        { path: '/farmer-corner', label: 'Corner', icon: Sprout },
+        { path: '/sellers', label: 'Sellers', icon: Store },
         { path: '/forum', label: 'Forum', icon: MessageSquare },
         { path: '/profile', label: 'Profile', icon: User },
       ];
