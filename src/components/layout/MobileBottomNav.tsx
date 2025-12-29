@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout, MessageSquare } from 'lucide-react';
+import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout, MessageSquare, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -43,8 +43,8 @@ const MobileBottomNav: React.FC = () => {
     return [
       { path: '/', label: 'Home', icon: Home },
       { path: '/products', label: 'Shop', icon: Search },
+      { path: '/sellers', label: 'Sellers', icon: Store },
       { path: '/cart', label: 'Cart', icon: ShoppingCart, badge: totalItems },
-      { path: '/forum', label: 'Forum', icon: MessageSquare },
       { path: '/profile', label: 'Profile', icon: User },
     ];
   };
