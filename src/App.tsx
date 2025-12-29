@@ -27,6 +27,7 @@ import Wishlist from "./pages/Wishlist";
 import FarmerCorner from "./pages/FarmerCorner";
 import FarmerForum from "./pages/FarmerForum";
 import Compare from "./pages/Compare";
+import Sellers from "./pages/Sellers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
                     <Route path="/profile" element={<CustomerProfile />} />
                     <Route path="/wishlist" element={<Wishlist />} />
                     <Route path="/compare" element={<Compare />} />
+                    <Route path="/sellers" element={<Sellers />} />
                     <Route path="/farmer-corner" element={<FarmerCorner />} />
                     <Route path="/forum" element={<FarmerForum />} />
                     <Route 
