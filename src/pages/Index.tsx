@@ -7,13 +7,18 @@ import ProductCard from '@/components/product/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { categories } from '@/data/products';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import CustomerDashboard from '@/components/dashboard/CustomerDashboard';
+import SellerDashboard from '@/components/dashboard/SellerDashboard';
+import AdminDashboard from '@/components/dashboard/AdminDashboard';
 
 const Index: React.FC = () => {
   const { t, language } = useLanguage();
+  const { user, role, profile } = useAuth();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,8 +82,13 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
+
+      {/* Role-based Dashboard Section */}
+      {user && role === 'admin' && <AdminDashboard />}
+      {user && role === 'seller' && <SellerDashboard />}
+      {user && role === 'customer' && <CustomerDashboard profile={profile} />}
       
-      {/* Hero Section */}
+      {/* Hero Section - Show only for guests or simplified for logged in users */}
       <section className="relative overflow-hidden hero-gradient text-primary-foreground">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1920&q=80')] bg-cover bg-center opacity-20" />
         <div className="relative container mx-auto px-4 py-12 sm:py-16 md:py-24 lg:py-32">
