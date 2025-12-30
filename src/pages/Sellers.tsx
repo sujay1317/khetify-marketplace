@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -6,7 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Store, Package, Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Loader2, Store, Package, Star, Search } from 'lucide-react';
 
 interface SellerWithStats {
   user_id: string;
@@ -20,6 +21,15 @@ interface SellerWithStats {
 const Sellers: React.FC = () => {
   const [sellers, setSellers] = useState<SellerWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredSellers = useMemo(() => {
+    if (!searchQuery.trim()) return sellers;
+    const query = searchQuery.toLowerCase();
+    return sellers.filter(seller => 
+      seller.full_name?.toLowerCase().includes(query)
+    );
+  }, [sellers, searchQuery]);
 
   useEffect(() => {
     fetchSellers();
@@ -112,22 +122,37 @@ const Sellers: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Our Sellers</h1>
-          <p className="text-muted-foreground">Discover trusted farmers and sellers</p>
+          <p className="text-muted-foreground mb-4">Discover trusted farmers and sellers</p>
+          
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search sellers by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : sellers.length === 0 ? (
+        ) : filteredSellers.length === 0 ? (
           <div className="text-center py-20">
             <Store className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">No Sellers Yet</h2>
-            <p className="text-muted-foreground">Check back later for new sellers.</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              {searchQuery ? 'No Sellers Found' : 'No Sellers Yet'}
+            </h2>
+            <p className="text-muted-foreground">
+              {searchQuery ? 'Try a different search term.' : 'Check back later for new sellers.'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {sellers.map((seller) => (
+            {filteredSellers.map((seller) => (
               <Link key={seller.user_id} to={`/store/${seller.user_id}`}>
                 <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
                   <CardContent className="p-4 flex flex-col items-center text-center">
