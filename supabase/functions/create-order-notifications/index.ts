@@ -18,9 +18,53 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { orderId, customerName, total, items } = await req.json();
+    // Authentication check - verify the user is authenticated
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - No authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    console.log("Creating notifications for order:", orderId);
+    if (authError || !user) {
+      console.error("Invalid token or user not found:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { orderId, customerName, total, items } = await req.json();
+
+    // Validate the order exists and belongs to the authenticated user
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("customer_id")
+      .eq("id", orderId)
+      .single();
+
+    if (orderError || !order) {
+      console.error("Order not found:", orderError);
+      return new Response(
+        JSON.stringify({ error: "Order not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (order.customer_id !== user.id) {
+      console.error("User is not the owner of this order");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - You don't own this order" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Creating notifications for order:", orderId, "by user:", user.id);
 
     // Get unique seller IDs from order items
     const sellerIds: string[] = [...new Set(items.map((item: any) => item.seller_id).filter(Boolean))] as string[];
