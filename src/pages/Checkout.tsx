@@ -12,6 +12,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useSound } from '@/hooks/useSound';
+import { z } from 'zod';
+
+// Shipping address validation schema
+const shippingAddressSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required").max(200, "Name too long"),
+  phone: z.string().trim().min(10, "Phone must be at least 10 digits").max(15, "Phone too long").regex(/^[\+]?[0-9\s\-]+$/, "Invalid phone number format"),
+  address: z.string().trim().min(1, "Address is required").max(500, "Address too long"),
+  city: z.string().trim().min(1, "City is required").max(100, "City too long"),
+  state: z.string().trim().max(100, "State too long").optional().or(z.literal('')),
+  pincode: z.string().trim().min(4, "Pincode too short").max(10, "Pincode too long").regex(/^[0-9]+$/, "Pincode must contain only numbers"),
+});
 
 const Checkout: React.FC = () => {
   const { t, language } = useLanguage();
@@ -47,10 +58,15 @@ const Checkout: React.FC = () => {
 
   const handleShippingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!shippingInfo.fullName || !shippingInfo.phone || !shippingInfo.address || !shippingInfo.city || !shippingInfo.pincode) {
-      toast.error('Please fill all required fields');
+    
+    // Validate shipping info with Zod schema
+    const result = shippingAddressSchema.safeParse(shippingInfo);
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(firstError.message);
       return;
     }
+    
     setStep('payment');
   };
 
@@ -61,9 +77,20 @@ const Checkout: React.FC = () => {
       return;
     }
 
+    // Re-validate shipping info before payment
+    const validationResult = shippingAddressSchema.safeParse(shippingInfo);
+    if (!validationResult.success) {
+      toast.error('Invalid shipping information');
+      setStep('shipping');
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
+      // Use validated data for database insert
+      const validatedShippingInfo = validationResult.data;
+      
       // Create order in database
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -71,7 +98,7 @@ const Checkout: React.FC = () => {
           customer_id: user.id,
           total: finalTotal,
           payment_method: paymentMethod,
-          shipping_address: shippingInfo,
+          shipping_address: validatedShippingInfo,
           status: 'pending'
         })
         .select()
