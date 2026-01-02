@@ -1,10 +1,4 @@
-// Sound effects hook for cart and purchase actions
-const sounds = {
-  addToCart: 'data:audio/wav;base64,UklGRl9vT19teleXdAQBBGNhcnQ=',
-  purchase: 'data:audio/wav;base64,UklGRl9vT19teleXdAQBBHB1cmNoYXNl',
-};
-
-// Pre-generated simple notification sounds using Web Audio API
+// Sound effects hook for cart and purchase actions using Web Audio API
 export const useSound = () => {
   const playAddToCart = () => {
     try {
