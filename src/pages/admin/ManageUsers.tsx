@@ -27,6 +27,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -165,6 +166,9 @@ const ManageUsers: React.FC = () => {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add New Seller</DialogTitle>
+                  <DialogDescription>
+                    Create a new seller account with login credentials.
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleCreateSeller} className="space-y-4">
                   <div>

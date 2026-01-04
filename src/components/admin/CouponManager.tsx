@@ -17,6 +17,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -191,6 +192,9 @@ const CouponManager: React.FC = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>{editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}</DialogTitle>
+              <DialogDescription>
+                {editingCoupon ? 'Update the coupon details below.' : 'Fill in the details to create a new discount coupon.'}
+              </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div>
