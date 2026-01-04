@@ -59,8 +59,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  {t('aboutUs')}
+                <Link to="/sellers" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  Our Sellers
                 </Link>
               </li>
             </ul>
@@ -71,24 +71,24 @@ const Footer = () => {
             <h4 className="font-bold text-lg mb-4 font-heading">Support</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/help" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  {t('helpCenter')}
+                <Link to="/forum" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  Community Forum
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  {t('contact')}
+                <Link to="/farmer-corner" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  Farmer Corner
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  {t('termsOfService')}
-                </Link>
+                <span className="text-primary-foreground/80 text-sm">
+                  support@khetify.com
+                </span>
               </li>
               <li>
-                <Link to="/privacy" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  {t('privacyPolicy')}
-                </Link>
+                <span className="text-primary-foreground/80 text-sm">
+                  +91 123 456 7890
+                </span>
               </li>
             </ul>
           </div>
@@ -126,7 +126,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/60 text-sm text-center md:text-left">
-              © 2024 Khetify. All rights reserved. Made with ❤️ for Indian Farmers.
+              © {new Date().getFullYear()} Khetify. All rights reserved. Made with ❤️ for Indian Farmers.
             </p>
             <div className="flex items-center gap-4">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-6 opacity-70" />

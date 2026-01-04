@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Star, Truck, Shield, Leaf, Minus, Plus, ShoppingCart, Heart, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -15,6 +15,7 @@ import ProductReviews from '@/components/product/ProductReviews';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { language, t } = useLanguage();
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -212,7 +213,7 @@ const ProductDetail: React.FC = () => {
     toast.success(`${quantity} × ${product.name} added to cart!`, {
       action: {
         label: 'View Cart',
-        onClick: () => window.location.href = '/cart',
+        onClick: () => navigate('/cart'),
       },
     });
   };
