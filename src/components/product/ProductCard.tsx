@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Star, Leaf, GitCompare, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { language, t } = useLanguage();
   const { addToCompare, removeFromCompare, isInCompare, maxProducts, compareList } = useCompare();
+  const navigate = useNavigate();
 
   const inCompare = isInCompare(product.id);
 
@@ -39,7 +40,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       description: `₹${product.price} × 1`,
       action: {
         label: 'View Cart',
-        onClick: () => window.location.href = '/cart',
+        onClick: () => navigate('/cart'),
       },
     });
   };
