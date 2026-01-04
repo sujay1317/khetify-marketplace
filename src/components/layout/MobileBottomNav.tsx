@@ -33,6 +33,7 @@ const MobileBottomNav: React.FC = () => {
 
     if (role === 'seller') {
       return [
+        { path: '/seller-home', label: 'Home', icon: Home },
         { path: '/seller', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/sellers', label: 'Sellers', icon: Store },
         { path: '/forum', label: 'Forum', icon: MessageSquare },

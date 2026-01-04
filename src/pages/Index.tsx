@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { ArrowRight, Truck, Shield, Headphones, Leaf } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -13,7 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import CustomerDashboard from '@/components/dashboard/CustomerDashboard';
-import SellerDashboard from '@/components/dashboard/SellerDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 
 const Index: React.FC = () => {
@@ -79,13 +78,17 @@ const Index: React.FC = () => {
     }
   };
 
+  // Redirect sellers to their dedicated home page
+  if (user && role === 'seller') {
+    return <Navigate to="/seller-home" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       {/* Role-based Dashboard Section */}
       {user && role === 'admin' && <AdminDashboard />}
-      {user && role === 'seller' && <SellerDashboard />}
       {user && role === 'customer' && <CustomerDashboard profile={profile} />}
       
       {/* Hero Section - Show only for guests or simplified for logged in users */}

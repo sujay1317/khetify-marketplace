@@ -18,6 +18,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Auth from "./pages/Auth";
 import SellerDashboard from "./pages/SellerDashboard";
+import SellerHome from "./pages/SellerHome";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageOrders from "./pages/admin/ManageOrders";
 import ManageUsers from "./pages/admin/ManageUsers";
@@ -59,6 +60,14 @@ const App = () => (
                     <Route path="/sellers" element={<Sellers />} />
                     <Route path="/farmer-corner" element={<FarmerCorner />} />
                     <Route path="/forum" element={<FarmerForum />} />
+                    <Route 
+                      path="/seller-home" 
+                      element={
+                        <ProtectedRoute allowedRoles={['seller']}>
+                          <SellerHome />
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route 
                       path="/seller/*" 
                       element={
