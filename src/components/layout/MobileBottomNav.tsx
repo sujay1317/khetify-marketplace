@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout, MessageSquare, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import khetifyLogo from '@/assets/khetify-logo.png';
 
 const MobileBottomNav: React.FC = () => {
   const location = useLocation();
@@ -55,6 +56,10 @@ const MobileBottomNav: React.FC = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border md:hidden safe-area-bottom">
+      {/* Small logo accent */}
+      <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-background border border-border shadow-md flex items-center justify-center">
+        <img src={khetifyLogo} alt="KhetiFy" className="w-7 h-7 object-contain" />
+      </div>
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const Icon = item.icon;

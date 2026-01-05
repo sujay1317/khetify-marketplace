@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, ShoppingBag, MessageSquare, ClipboardList, Heart, LayoutDashboard, Sprout, User, LogOut, Globe, X } from 'lucide-react';
+import khetifyLogo from '@/assets/khetify-logo.png';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,12 +68,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ children }) => {
         <div className="flex flex-col h-full">
           {/* Header */}
           <SheetHeader className="p-4 border-b border-border">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
-                <span className="text-xl">🌾</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <img 
+                src={khetifyLogo} 
+                alt="KhetiFy Logo" 
+                className="w-10 h-10 object-contain"
+              />
               <SheetTitle className="text-xl font-bold font-heading text-primary">
-                Khetify
+                KhetiFy
               </SheetTitle>
             </div>
           </SheetHeader>
