@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, Menu, Search, User, Globe, Heart, LayoutDashboard, Package, LogOut, Sprout } from 'lucide-react';
-import agrisaathiLogo from '@/assets/agrisaathi-logo.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -79,11 +78,12 @@ const Header = () => {
 
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
-              <img 
-                src={agrisaathiLogo} 
-                alt="AgriSaathi - Your Farm Friend" 
-                className="h-10 md:h-12 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
-              />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md group-hover:shadow-glow transition-all duration-300">
+                <span className="text-xl">🌾</span>
+              </div>
+              <span className="text-xl md:text-2xl font-bold font-heading text-primary">
+                AgriSaathi
+              </span>
             </Link>
           </div>
 
