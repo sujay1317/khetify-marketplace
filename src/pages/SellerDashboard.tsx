@@ -666,7 +666,7 @@ const SellerDashboard: React.FC = () => {
                   <Card className="p-12 text-center">
                     <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
                     <h3 className="text-lg font-semibold mb-2">No products yet</h3>
-                    <p className="text-muted-foreground mb-4">Start adding products to sell on Khetify</p>
+                    <p className="text-muted-foreground mb-4">Start adding products to sell on AgriSaathi</p>
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
