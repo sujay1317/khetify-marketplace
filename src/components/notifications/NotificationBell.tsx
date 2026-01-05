@@ -27,11 +27,14 @@ interface Notification {
 const NotificationBell: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { playNotification } = useSound();
 
+  // Only show notification bell for sellers and admins
+  const isSellerOrAdmin = role === 'seller' || role === 'admin';
+
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isSellerOrAdmin) return;
 
     // Fetch notifications
     const fetchNotifications = async () => {
@@ -73,7 +76,7 @@ const NotificationBell: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, playNotification]);
+  }, [user, playNotification, isSellerOrAdmin]);
 
   const markAsRead = async (id: string) => {
     await supabase
@@ -109,7 +112,8 @@ const NotificationBell: React.FC = () => {
     }
   };
 
-  if (!user) return null;
+  // Only show for sellers and admins
+  if (!user || !isSellerOrAdmin) return null;
 
   return (
     <DropdownMenu>
