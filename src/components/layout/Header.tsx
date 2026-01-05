@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import khetifyLogo from '@/assets/khetify-logo.png';
 import { ShoppingCart, Menu, Search, User, Globe, Heart, LayoutDashboard, Package, LogOut, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,12 +78,14 @@ const Header = () => {
             </AppSidebar>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md group-hover:shadow-glow transition-all duration-300">
-                <span className="text-xl">🌾</span>
-              </div>
+            <Link to="/" className="flex items-center gap-1 group">
+              <img 
+                src={khetifyLogo} 
+                alt="KhetiFy Logo" 
+                className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300"
+              />
               <span className="text-xl md:text-2xl font-bold font-heading text-primary">
-                Khetify
+                KhetiFy
               </span>
             </Link>
           </div>
