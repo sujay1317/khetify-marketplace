@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +11,7 @@ import { CompareProvider } from "@/contexts/CompareContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import CompareBar from "@/components/compare/CompareBar";
+import SplashScreen from "@/components/layout/SplashScreen";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
@@ -33,8 +35,21 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash on first visit per session
+    const hasSeenSplash = sessionStorage.getItem('khetify_splash_shown');
+    return !hasSeenSplash;
+  });
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('khetify_splash_shown', 'true');
+    setShowSplash(false);
+  };
+
+  return (
   <QueryClientProvider client={queryClient}>
+    {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     <LanguageProvider>
       <AuthProvider>
         <CartProvider>
@@ -112,6 +127,7 @@ const App = () => (
       </AuthProvider>
     </LanguageProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;

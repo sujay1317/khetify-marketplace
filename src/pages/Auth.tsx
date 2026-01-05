@@ -84,7 +84,7 @@ const Auth: React.FC = () => {
               {isLogin ? t('welcomeBack') : t('createAccount')}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {isLogin ? 'Sign in to continue shopping' : 'Join Khetify today'}
+              {isLogin ? 'Sign in to continue shopping' : 'Join KhetiFy today'}
             </p>
           </div>
 
