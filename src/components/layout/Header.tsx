@@ -82,7 +82,7 @@ const Header = () => {
                 <span className="text-xl">🌾</span>
               </div>
               <span className="text-xl md:text-2xl font-bold font-heading text-primary">
-                AgriSaathi
+                Khetify
               </span>
             </Link>
           </div>

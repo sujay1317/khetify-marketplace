@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
-        name: "AgriSaathi - Your Farm Friend",
-        short_name: "AgriSaathi",
+        name: "Khetify - Farm Fresh, Farm Direct",
+        short_name: "Khetify",
         description: "Quality seeds, fertilizers, pesticides & farm tools delivered to your doorstep",
         theme_color: "#2d5a27",
         background_color: "#faf9f7",

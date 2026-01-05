@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
         ghost: "hover:bg-accent/10 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // AgriSaathi custom variants
+        // Khetify custom variants
         hero: "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg hover:shadow-glow hover:scale-[1.02] font-bold",
         gold: "bg-gradient-to-r from-secondary to-sunset text-secondary-foreground shadow-md hover:shadow-lg font-bold",
         glass: "bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30",
