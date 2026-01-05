@@ -17,7 +17,7 @@ const Footer = () => {
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                 <span className="text-xl">🌾</span>
               </div>
-              <span className="text-2xl font-bold font-heading">Khetify</span>
+              <span className="text-2xl font-bold font-heading">AgriSaathi</span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-6">
               Your trusted partner for quality agricultural products. 
@@ -82,7 +82,7 @@ const Footer = () => {
               </li>
               <li>
                 <span className="text-primary-foreground/80 text-sm">
-                  support@khetify.com
+                  support@agrisaathi.com
                 </span>
               </li>
               <li>
@@ -112,8 +112,8 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-secondary" />
-                <a href="mailto:support@khetify.com" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  support@khetify.com
+                <a href="mailto:support@agrisaathi.com" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  support@agrisaathi.com
                 </a>
               </li>
             </ul>
@@ -126,7 +126,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/60 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} Khetify. All rights reserved. Made with ❤️ for Indian Farmers.
+              © {new Date().getFullYear()} AgriSaathi. All rights reserved. Made with ❤️ for Indian Farmers.
             </p>
             <div className="flex items-center gap-4">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-6 opacity-70" />

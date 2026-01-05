@@ -61,7 +61,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom Khetify colors
+        // Custom AgriSaathi colors
         soil: "hsl(var(--soil))",
         leaf: "hsl(var(--leaf))",
         wheat: "hsl(var(--wheat))",

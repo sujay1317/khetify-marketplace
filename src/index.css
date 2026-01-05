@@ -22,7 +22,7 @@
 
 @layer base {
   :root {
-    /* Khetify - Earthy Farming Theme */
+    /* AgriSaathi - Earthy Farming Theme */
     --background: 45 30% 98%;
     --foreground: 30 25% 15%;
 
@@ -57,7 +57,7 @@
 
     --radius: 1rem;
 
-    /* Custom Khetify Colors */
+    /* Custom AgriSaathi Colors */
     --soil: 25 35% 25%;
     --leaf: 120 45% 40%;
     --wheat: 42 85% 55%;
