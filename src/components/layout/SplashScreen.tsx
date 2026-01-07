@@ -54,7 +54,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
             KhetiFy
           </h1>
           <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            Farm Fresh, Farm Direct
+            From Sellers to Farmers, Delivered with Care
           </p>
         </div>
 
@@ -70,7 +70,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
       <p className={`absolute bottom-8 text-xs text-muted-foreground transition-all duration-500 ${
         isExiting ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
       }`}>
-        Quality seeds, fertilizers & farm tools
+        Connecting sellers with farmers across India
       </p>
     </div>
   );
