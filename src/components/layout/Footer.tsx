@@ -20,10 +20,10 @@ const Footer = () => {
                 alt="KHETIFY Logo" 
                 className="w-12 h-12 object-contain bg-white/90 rounded-xl p-1"
               />
-              <div className="flex flex-col leading-none">
-                <span className="text-xl font-bold font-heading">KHETIFY</span>
-                <span className="text-sm font-semibold text-secondary">.shop</span>
-              </div>
+              <span className="text-xl font-bold font-heading">
+                <span className="text-primary-foreground">KHETIFY</span>
+                <span className="text-secondary">.shop</span>
+              </span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-6">
               Your trusted partner for quality agricultural products. 
