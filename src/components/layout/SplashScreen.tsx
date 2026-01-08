@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import khetifyLogo from '@/assets/khetify-logo.png';
+import khetifyLogo from '@/assets/khetify-logo-new.png';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -51,9 +51,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
         {/* Brand name */}
         <div className="text-center">
           <h1 className="text-4xl md:text-5xl font-bold font-heading text-primary tracking-tight">
-            KhetiFy
+            KHETIFY
           </h1>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
+          <span className="text-xl md:text-2xl font-semibold text-secondary">.shop</span>
+          <p className="text-muted-foreground mt-3 text-sm md:text-base">
             From Sellers to Farmers, Delivered with Care
           </p>
         </div>
