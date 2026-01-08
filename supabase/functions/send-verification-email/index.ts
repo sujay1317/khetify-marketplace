@@ -24,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, confirmationUrl, userName }: VerificationEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "KhetiFy <onboarding@resend.dev>",
+      from: "KhetiFy <noreply@khetify.shop>",
       to: [email],
       subject: "Verify your KhetiFy account",
       html: `
