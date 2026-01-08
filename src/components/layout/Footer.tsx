@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import khetifyLogo from '@/assets/khetify-logo-new.png';
 
 const Footer = () => {
   const { t } = useLanguage();
@@ -13,11 +14,16 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <span className="text-xl">🌾</span>
+            <Link to="/" className="flex items-center gap-3 mb-4">
+              <img 
+                src={khetifyLogo} 
+                alt="KHETIFY Logo" 
+                className="w-12 h-12 object-contain bg-white/90 rounded-xl p-1"
+              />
+              <div className="flex flex-col leading-none">
+                <span className="text-xl font-bold font-heading">KHETIFY</span>
+                <span className="text-sm font-semibold text-secondary">.shop</span>
               </div>
-              <span className="text-2xl font-bold font-heading">Khetify</span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-6">
               Your trusted partner for quality agricultural products. 
@@ -126,7 +132,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/60 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} Khetify. All rights reserved. Made with ❤️ for Indian Farmers.
+              © {new Date().getFullYear()} KHETIFY.shop. All rights reserved. Made with ❤️ for Indian Farmers.
             </p>
             <div className="flex items-center gap-4">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-6 opacity-70" />
