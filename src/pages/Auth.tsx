@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import khetifyLogo from '@/assets/khetify-logo-new.png';
 import {
   Select,
   SelectContent,
@@ -77,14 +78,17 @@ const Auth: React.FC = () => {
       <main className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-80px)]">
         <Card className="w-full max-w-md p-8 animate-scale-in">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-3xl">🌾</span>
-            </div>
-            <h1 className="text-2xl font-bold font-heading">
-              {isLogin ? t('welcomeBack') : t('createAccount')}
+            <img 
+              src={khetifyLogo} 
+              alt="KHETIFY Logo" 
+              className="w-20 h-20 mx-auto mb-4 object-contain"
+            />
+            <h1 className="text-2xl font-bold font-heading flex items-center justify-center gap-0">
+              <span className="text-primary">KHETIFY</span>
+              <span className="text-secondary">.shop</span>
             </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              {isLogin ? 'Sign in to continue shopping' : 'Join KhetiFy today'}
+            <p className="text-muted-foreground text-sm mt-2">
+              {isLogin ? 'Sign in to continue shopping' : 'Join KHETIFY.shop today'}
             </p>
           </div>
 

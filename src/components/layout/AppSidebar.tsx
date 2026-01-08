@@ -74,12 +74,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ children }) => {
                 alt="KHETIFY Logo" 
                 className="w-10 h-10 object-contain"
               />
-              <div className="flex flex-col leading-none">
-                <SheetTitle className="text-lg font-bold font-heading text-primary tracking-tight">
-                  KHETIFY
-                </SheetTitle>
-                <span className="text-sm font-semibold text-secondary">.shop</span>
-              </div>
+              <SheetTitle className="text-lg font-bold font-heading tracking-tight">
+                <span className="text-primary">KHETIFY</span>
+                <span className="text-secondary">.shop</span>
+              </SheetTitle>
             </div>
           </SheetHeader>
 

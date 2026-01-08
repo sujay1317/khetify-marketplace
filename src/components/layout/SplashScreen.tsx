@@ -50,10 +50,10 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
 
         {/* Brand name */}
         <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-bold font-heading text-primary tracking-tight">
-            KHETIFY
+          <h1 className="text-4xl md:text-5xl font-bold font-heading tracking-tight">
+            <span className="text-primary">KHETIFY</span>
+            <span className="text-secondary">.shop</span>
           </h1>
-          <span className="text-xl md:text-2xl font-semibold text-secondary">.shop</span>
           <p className="text-muted-foreground mt-3 text-sm md:text-base">
             From Sellers to Farmers, Delivered with Care
           </p>
