@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, ArrowLeft, ChevronDown, ChevronUp, MapPin, Phone, User, Package } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, ChevronDown, ChevronUp, MapPin, Phone, User, Package, Store } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -43,6 +43,7 @@ interface OrderItem {
   quantity: number;
   price: number;
   seller_id: string | null;
+  seller_name?: string | null;
 }
 
 interface Order {
@@ -61,11 +62,17 @@ interface CustomerProfile {
   phone: string | null;
 }
 
+interface SellerProfile {
+  user_id: string;
+  full_name: string | null;
+}
+
 const ManageOrders: React.FC = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
   const [customerProfiles, setCustomerProfiles] = useState<Record<string, CustomerProfile>>({});
+  const [sellerProfiles, setSellerProfiles] = useState<Record<string, SellerProfile>>({});
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
@@ -138,7 +145,32 @@ const ManageOrders: React.FC = () => {
       .eq('order_id', orderId);
 
     if (!error && data) {
-      setOrderItems(prev => ({ ...prev, [orderId]: data }));
+      // Get unique seller IDs that we haven't fetched yet
+      const sellerIds = [...new Set(data.map(item => item.seller_id).filter(Boolean))] as string[];
+      const newSellerIds = sellerIds.filter(id => !sellerProfiles[id]);
+
+      if (newSellerIds.length > 0) {
+        const { data: sellers } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', newSellerIds);
+
+        if (sellers) {
+          const newProfiles: Record<string, SellerProfile> = {};
+          sellers.forEach(s => {
+            newProfiles[s.user_id] = s;
+          });
+          setSellerProfiles(prev => ({ ...prev, ...newProfiles }));
+        }
+      }
+
+      // Add seller names to items
+      const itemsWithSellers = data.map(item => ({
+        ...item,
+        seller_name: item.seller_id ? (sellerProfiles[item.seller_id]?.full_name || null) : null
+      }));
+
+      setOrderItems(prev => ({ ...prev, [orderId]: itemsWithSellers }));
     }
   };
 
@@ -342,17 +374,39 @@ const ManageOrders: React.FC = () => {
                                 </div>
                               ) : (
                                 <div className="bg-background rounded-lg divide-y">
-                                  {items.map((item) => (
-                                    <div key={item.id} className="p-3 flex justify-between items-center">
-                                      <div>
-                                        <p className="font-medium text-sm">{item.product_name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                          Qty: {item.quantity} × ₹{item.price}
-                                        </p>
+                                  {items.map((item) => {
+                                    const sellerName = item.seller_id ? sellerProfiles[item.seller_id]?.full_name : null;
+                                    return (
+                                      <div key={item.id} className="p-3">
+                                        <div className="flex justify-between items-start">
+                                          <div className="flex-1">
+                                            <p className="font-medium text-sm">{item.product_name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                              Qty: {item.quantity} × ₹{item.price}
+                                            </p>
+                                            {item.seller_id && (
+                                              <div className="flex items-center gap-1 mt-1">
+                                                <Store className="w-3 h-3 text-primary" />
+                                                <span className="text-xs text-primary font-medium">
+                                                  {sellerName || 'Loading...'}
+                                                </span>
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/admin/seller-report/${item.seller_id}`);
+                                                  }}
+                                                  className="text-xs text-muted-foreground hover:text-primary ml-1 underline"
+                                                >
+                                                  View Report
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <p className="font-semibold">₹{item.quantity * item.price}</p>
+                                        </div>
                                       </div>
-                                      <p className="font-semibold">₹{item.quantity * item.price}</p>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                   <div className="p-3 flex justify-between items-center bg-muted/50">
                                     <span className="font-semibold">Total</span>
                                     <span className="font-bold text-primary">₹{order.total}</span>
