@@ -24,6 +24,7 @@ import SellerHome from "./pages/SellerHome";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageOrders from "./pages/admin/ManageOrders";
 import ManageUsers from "./pages/admin/ManageUsers";
+import SellerOrderReport from "./pages/admin/SellerOrderReport";
 import CustomerOrders from "./pages/CustomerOrders";
 import CustomerProfile from "./pages/CustomerProfile";
 import Wishlist from "./pages/Wishlist";
@@ -112,6 +113,14 @@ const App = () => {
                       element={
                         <ProtectedRoute allowedRoles={['admin']}>
                           <ManageUsers />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/seller-report/:sellerId" 
+                      element={
+                        <ProtectedRoute allowedRoles={['admin']}>
+                          <SellerOrderReport />
                         </ProtectedRoute>
                       } 
                     />
