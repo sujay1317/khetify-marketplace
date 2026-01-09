@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, Plus } from 'lucide-react';
+import { Users, ArrowLeft, Plus, FileBarChart } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -32,6 +32,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface UserWithRole {
   id: string;
@@ -262,19 +267,35 @@ const ManageUsers: React.FC = () => {
                         </TableCell>
                         <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          <Select
-                            value={user.role}
-                            onValueChange={(value: 'admin' | 'seller' | 'customer') => handleUpdateUserRole(user.user_id, value)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="customer">Customer</SelectItem>
-                              <SelectItem value="seller">Seller</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={user.role}
+                              onValueChange={(value: 'admin' | 'seller' | 'customer') => handleUpdateUserRole(user.user_id, value)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="customer">Customer</SelectItem>
+                                <SelectItem value="seller">Seller</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {user.role === 'seller' && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => navigate(`/admin/seller-report/${user.user_id}`)}
+                                  >
+                                    <FileBarChart className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>View Order Report</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
