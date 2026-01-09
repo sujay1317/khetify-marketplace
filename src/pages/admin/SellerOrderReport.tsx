@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Package, Calendar, IndianRupee, Loader2, User, MapPin, Phone, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, IndianRupee, Loader2, User, MapPin, Phone, Clock, ChevronDown, ChevronUp, Receipt } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import OrderReceipt from '@/components/admin/OrderReceipt';
 
 interface SellerProfile {
   user_id: string;
@@ -75,6 +76,7 @@ const SellerOrderReport: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (sellerId) {
@@ -370,7 +372,18 @@ const SellerOrderReport: React.FC = () => {
                                         </div>
                                       </div>
                                     </div>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setReceiptOrder(order);
+                                        }}
+                                      >
+                                        <Receipt className="w-4 h-4 mr-1" />
+                                        Receipt
+                                      </Button>
                                       <Badge className={`${getStatusColor(order.status)} text-white`}>
                                         {order.status}
                                       </Badge>
@@ -455,6 +468,25 @@ const SellerOrderReport: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Receipt Modal */}
+      {receiptOrder && seller && (
+        <OrderReceipt
+          open={!!receiptOrder}
+          onClose={() => setReceiptOrder(null)}
+          data={{
+            orderId: receiptOrder.id,
+            orderDate: new Date(receiptOrder.created_at).toLocaleString('en-IN'),
+            customerName: receiptOrder.customer_name || 'Customer',
+            shippingAddress: receiptOrder.shipping_address,
+            items: receiptOrder.items,
+            total: receiptOrder.total,
+            paymentMethod: receiptOrder.payment_method,
+            status: receiptOrder.status,
+            sellerName: seller.full_name || 'Seller'
+          }}
+        />
+      )}
     </div>
   );
 };
