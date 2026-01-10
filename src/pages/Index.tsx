@@ -128,7 +128,7 @@ const Index: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8">
             {[
-              { icon: Truck, text: 'Free Delivery', subtext: 'Orders above ₹500' },
+              { icon: Truck, text: 'Fast Delivery', subtext: '₹30 per item, max ₹200' },
               { icon: Shield, text: '100% Genuine', subtext: 'Quality assured' },
               { icon: Headphones, text: '24/7 Support', subtext: 'Expert advice' },
               { icon: Leaf, text: 'Eco Friendly', subtext: 'Sustainable' },
