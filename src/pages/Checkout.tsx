@@ -44,7 +44,32 @@ const Checkout: React.FC = () => {
     pincode: '',
   });
 
-  const deliveryFee = totalPrice >= 500 ? 0 : 50;
+  // Delivery fee calculation rules:
+  // - ₹30 per product
+  // - If cart has 5 products, charge ₹120 (discount tier)
+  // - If order total < ₹100, delivery is ₹20
+  // - Max delivery charge is ₹200
+  const totalProductCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const calculateDeliveryFee = () => {
+    // If order total is less than ₹100, flat ₹20 delivery
+    if (totalPrice < 100) {
+      return 20;
+    }
+    
+    // Special tier: 5 products = ₹120
+    if (totalProductCount === 5) {
+      return 120;
+    }
+    
+    // Base calculation: ₹30 per product
+    const baseFee = totalProductCount * 30;
+    
+    // Cap at ₹200 maximum
+    return Math.min(baseFee, 200);
+  };
+  
+  const deliveryFee = calculateDeliveryFee();
   const codFee = paymentMethod === 'cod' ? 20 : 0;
   const finalTotal = totalPrice + deliveryFee + codFee;
 
@@ -424,10 +449,10 @@ const Checkout: React.FC = () => {
                   <span>₹{totalPrice}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery</span>
-                  <span className={deliveryFee === 0 ? 'text-accent' : ''}>
-                    {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
+                  <span className="text-muted-foreground">
+                    Delivery ({totalProductCount} items)
                   </span>
+                  <span>₹{deliveryFee}</span>
                 </div>
                 {codFee > 0 && (
                   <div className="flex justify-between">
