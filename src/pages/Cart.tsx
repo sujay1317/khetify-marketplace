@@ -20,7 +20,25 @@ const Cart: React.FC = () => {
     }
   };
 
-  const deliveryFee = totalPrice >= 500 ? 0 : 50;
+  // Delivery fee calculation rules:
+  // - ₹30 per product
+  // - If cart has 5 products, charge ₹120 (discount tier)
+  // - If order total < ₹100, delivery is ₹20
+  // - Max delivery charge is ₹200
+  const totalProductCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const calculateDeliveryFee = () => {
+    if (totalPrice < 100) {
+      return 20;
+    }
+    if (totalProductCount === 5) {
+      return 120;
+    }
+    const baseFee = totalProductCount * 30;
+    return Math.min(baseFee, 200);
+  };
+  
+  const deliveryFee = calculateDeliveryFee();
   const finalTotal = totalPrice + deliveryFee;
 
   if (items.length === 0) {
@@ -175,16 +193,12 @@ const Cart: React.FC = () => {
                   <span className="font-medium">₹{totalPrice}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery</span>
-                  <span className={`font-medium ${deliveryFee === 0 ? 'text-accent' : ''}`}>
-                    {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
-                  </span>
+                  <span className="text-muted-foreground">Delivery ({totalProductCount} items)</span>
+                  <span className="font-medium">₹{deliveryFee}</span>
                 </div>
-                {totalPrice < 500 && (
-                  <p className="text-xs text-muted-foreground bg-muted p-2 rounded-lg">
-                    Add ₹{500 - totalPrice} more for free delivery!
-                  </p>
-                )}
+                <p className="text-xs text-muted-foreground bg-muted p-2 rounded-lg">
+                  ₹30 per item • Max ₹200 • 5 items = ₹120 special
+                </p>
                 <div className="border-t border-border pt-3 flex justify-between text-base">
                   <span className="font-semibold">{t('total')}</span>
                   <span className="font-bold text-primary text-xl">₹{finalTotal}</span>
