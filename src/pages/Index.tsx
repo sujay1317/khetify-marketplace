@@ -30,6 +30,21 @@ const Index: React.FC = () => {
         .limit(8);
 
       if (!error && data) {
+        // Fetch seller profiles for free_delivery status
+        const sellerIds = [...new Set(data.map(p => p.seller_id))];
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, free_delivery')
+          .in('user_id', sellerIds);
+
+        const sellerMap: Record<string, { name: string; freeDelivery: boolean }> = {};
+        profilesData?.forEach((profile) => {
+          sellerMap[profile.user_id] = {
+            name: profile.full_name || 'Unknown Seller',
+            freeDelivery: profile.free_delivery || false,
+          };
+        });
+
         const products: Product[] = data.map((p) => ({
           id: p.id,
           name: p.name,
@@ -43,10 +58,11 @@ const Index: React.FC = () => {
           stock: p.stock || 0,
           unit: p.unit || 'kg',
           sellerId: p.seller_id,
-          sellerName: '',
+          sellerName: sellerMap[p.seller_id]?.name || '',
           rating: 0,
           reviews: 0,
           isOrganic: p.is_organic || false,
+          freeDelivery: sellerMap[p.seller_id]?.freeDelivery || false,
         }));
         setFeaturedProducts(products);
       }

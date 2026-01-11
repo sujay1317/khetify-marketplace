@@ -46,6 +46,7 @@ interface DBProduct {
 interface SellerProfile {
   user_id: string;
   full_name: string | null;
+  free_delivery: boolean | null;
 }
 
 const Products: React.FC = () => {
@@ -119,12 +120,15 @@ const Products: React.FC = () => {
     const sellerIds = [...new Set(productsData.map(p => p.seller_id))];
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('user_id, full_name')
+      .select('user_id, full_name, free_delivery')
       .in('user_id', sellerIds);
 
-    const sellerMap: Record<string, string> = {};
+    const sellerMap: Record<string, { name: string; freeDelivery: boolean }> = {};
     profilesData?.forEach((profile: SellerProfile) => {
-      sellerMap[profile.user_id] = profile.full_name || 'Unknown Seller';
+      sellerMap[profile.user_id] = {
+        name: profile.full_name || 'Unknown Seller',
+        freeDelivery: profile.free_delivery || false,
+      };
     });
 
     // Fetch average ratings for all products
@@ -163,11 +167,12 @@ const Products: React.FC = () => {
       stock: p.stock || 0,
       unit: p.unit || 'kg',
       sellerId: p.seller_id,
-      sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
+      sellerName: sellerMap[p.seller_id]?.name || 'Unknown Seller',
       rating: ratingsMap[p.id]?.avg || 0,
       reviews: ratingsMap[p.id]?.count || 0,
       isOrganic: p.is_organic || false,
       isFeatured: false,
+      freeDelivery: sellerMap[p.seller_id]?.freeDelivery || false,
     }));
 
     setProducts(transformedProducts);

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Store, Star, Package, Loader2 } from 'lucide-react';
+import { ArrowLeft, Store, Star, Package, Loader2, Truck } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/product/ProductCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/contexts/CartContext';
 
@@ -15,6 +16,8 @@ interface SellerProfile {
   avatar_url: string | null;
   phone: string | null;
   created_at: string;
+  shop_image: string | null;
+  free_delivery: boolean | null;
 }
 
 const SellerStore: React.FC = () => {
@@ -114,6 +117,7 @@ const SellerStore: React.FC = () => {
       reviews: ratingsMap[p.id]?.count || 0,
       isOrganic: p.is_organic || false,
       isFeatured: false,
+      freeDelivery: profileData.free_delivery || false,
     }));
 
     setProducts(transformedProducts);
@@ -174,6 +178,17 @@ const SellerStore: React.FC = () => {
           Back to Products
         </Link>
 
+        {/* Shop Image Banner */}
+        {seller.shop_image && (
+          <div className="mb-6 rounded-xl overflow-hidden">
+            <img 
+              src={seller.shop_image} 
+              alt={`${seller.full_name}'s shop`}
+              className="w-full h-48 md:h-64 object-cover"
+            />
+          </div>
+        )}
+
         {/* Seller Header */}
         <Card className="p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -192,12 +207,20 @@ const SellerStore: React.FC = () => {
                 </h1>
               </div>
               
-              <p className="text-muted-foreground mb-4">
+              <p className="text-muted-foreground mb-2">
                 Seller since {new Date(seller.created_at).toLocaleDateString('en-IN', { 
                   year: 'numeric', 
                   month: 'long' 
                 })}
               </p>
+
+              {/* Free Delivery Badge */}
+              {seller.free_delivery && (
+                <Badge variant="success" className="mb-4 gap-1">
+                  <Truck className="w-3.5 h-3.5" />
+                  Free Delivery on all products
+                </Badge>
+              )}
 
               {/* Stats */}
               <div className="flex flex-wrap justify-center sm:justify-start gap-6">
