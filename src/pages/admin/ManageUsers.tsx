@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, Plus, FileBarChart } from 'lucide-react';
+import { Users, ArrowLeft, Plus, FileBarChart, Upload, X } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -59,9 +61,29 @@ const ManageUsers: React.FC = () => {
     email: '',
     password: '',
     fullName: '',
-    phone: ''
+    phone: '',
+    freeDelivery: false
   });
+  const [shopImage, setShopImage] = useState<File | null>(null);
+  const [shopImagePreview, setShopImagePreview] = useState<string | null>(null);
   const [isCreatingSeller, setIsCreatingSeller] = useState(false);
+
+  const handleShopImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setShopImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setShopImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const clearShopImage = () => {
+    setShopImage(null);
+    setShopImagePreview(null);
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -120,13 +142,20 @@ const ManageUsers: React.FC = () => {
 
     setIsCreatingSeller(true);
     try {
+      // First create the seller account
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-seller`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify(sellerForm),
+        body: JSON.stringify({
+          email: sellerForm.email,
+          password: sellerForm.password,
+          fullName: sellerForm.fullName,
+          phone: sellerForm.phone,
+          freeDelivery: sellerForm.freeDelivery
+        }),
       });
 
       const data = await response.json();
@@ -135,9 +164,36 @@ const ManageUsers: React.FC = () => {
         throw new Error(data.error || 'Failed to create seller');
       }
 
+      // If shop image is provided, upload it
+      if (shopImage && data.user?.id) {
+        const fileExt = shopImage.name.split('.').pop();
+        const fileName = `${data.user.id}/shop-image.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('shop-images')
+          .upload(fileName, shopImage, { upsert: true });
+
+        if (uploadError) {
+          console.error('Error uploading shop image:', uploadError);
+          toast.error('Seller created but shop image upload failed');
+        } else {
+          // Get the public URL and update the profile
+          const { data: publicUrlData } = supabase.storage
+            .from('shop-images')
+            .getPublicUrl(fileName);
+
+          await supabase
+            .from('profiles')
+            .update({ shop_image: publicUrlData.publicUrl })
+            .eq('user_id', data.user.id);
+        }
+      }
+
       toast.success('Seller created successfully!');
       setIsAddSellerOpen(false);
-      setSellerForm({ email: '', password: '', fullName: '', phone: '' });
+      setSellerForm({ email: '', password: '', fullName: '', phone: '', freeDelivery: false });
+      setShopImage(null);
+      setShopImagePreview(null);
       fetchUsers();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to create seller');
@@ -214,6 +270,60 @@ const ManageUsers: React.FC = () => {
                       required
                     />
                   </div>
+                  
+                  {/* Shop Image Upload */}
+                  <div>
+                    <label className="text-sm font-medium">Shop Image</label>
+                    {shopImagePreview ? (
+                      <div className="relative mt-2">
+                        <img 
+                          src={shopImagePreview} 
+                          alt="Shop preview" 
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-6 w-6"
+                          onClick={clearShopImage}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="mt-2">
+                        <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground mt-1">Upload shop image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleShopImageChange}
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Free Delivery Checkbox */}
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="freeDelivery"
+                      checked={sellerForm.freeDelivery}
+                      onCheckedChange={(checked) => 
+                        setSellerForm({ ...sellerForm, freeDelivery: checked === true })
+                      }
+                    />
+                    <Label htmlFor="freeDelivery" className="text-sm font-medium cursor-pointer">
+                      Free Delivery for all products
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground -mt-2 ml-6">
+                    If checked, all products from this seller will have free delivery
+                  </p>
+
                   <Button type="submit" className="w-full" disabled={isCreatingSeller}>
                     {isCreatingSeller ? 'Creating...' : 'Create Seller Account'}
                   </Button>

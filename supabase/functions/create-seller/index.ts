@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     // Get the seller data from request
-    const { email, password, fullName, phone } = await req.json();
+    const { email, password, fullName, phone, freeDelivery } = await req.json();
 
     if (!email || !password || !fullName) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -75,6 +75,7 @@ serve(async (req) => {
         full_name: fullName,
         phone: phone || null,
         role: "seller",
+        free_delivery: freeDelivery || false,
       },
     });
 
@@ -83,6 +84,18 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Update the profile with free_delivery setting
+    if (newUser?.user) {
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .update({ free_delivery: freeDelivery || false })
+        .eq('user_id', newUser.user.id);
+
+      if (profileError) {
+        console.error('Error updating profile with free_delivery:', profileError);
+      }
     }
 
     return new Response(
