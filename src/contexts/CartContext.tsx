@@ -19,6 +19,7 @@ export interface Product {
   reviews: number;
   isOrganic?: boolean;
   isFeatured?: boolean;
+  freeDelivery?: boolean;
 }
 
 export interface CartItem {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Star, Leaf, GitCompare, Check } from 'lucide-react';
+import { ShoppingCart, Star, Leaf, GitCompare, Check, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -167,10 +167,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
           </div>
 
-          {/* Stock Status */}
-          <p className={`text-[10px] sm:text-xs mt-1.5 sm:mt-2 ${product.stock > 0 ? 'text-accent' : 'text-destructive'}`}>
-            {product.stock > 0 ? `${product.stock} ${t('inStock')}` : t('outOfStock')}
-          </p>
+          {/* Stock Status & Free Delivery */}
+          <div className="flex items-center justify-between mt-1.5 sm:mt-2 gap-1 flex-wrap">
+            <p className={`text-[10px] sm:text-xs ${product.stock > 0 ? 'text-accent' : 'text-destructive'}`}>
+              {product.stock > 0 ? `${product.stock} ${t('inStock')}` : t('outOfStock')}
+            </p>
+            {product.freeDelivery && (
+              <Badge variant="outline" className="text-[9px] sm:text-[10px] px-1 py-0 gap-0.5 text-accent border-accent/30">
+                <Truck className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                Free
+              </Badge>
+            )}
+          </div>
 
           {/* Mobile Add to Cart Button */}
           <Button
