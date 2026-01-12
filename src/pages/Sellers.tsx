@@ -7,18 +7,22 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Loader2, Store, Package, Star, Search } from 'lucide-react';
+import { Loader2, Store, Package, Star, Search, Truck } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SellerWithStats {
   user_id: string;
   full_name: string | null;
   avatar_url: string | null;
+  shop_image: string | null;
+  free_delivery: boolean | null;
   created_at: string;
   product_count: number;
   avg_rating: number;
 }
 
 const Sellers: React.FC = () => {
+  const { t } = useLanguage();
   const [sellers, setSellers] = useState<SellerWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,7 +60,7 @@ const Sellers: React.FC = () => {
       // Get seller profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, avatar_url, created_at')
+        .select('user_id, full_name, avatar_url, shop_image, free_delivery, created_at')
         .in('user_id', sellerIds);
 
       if (profilesError) throw profilesError;
@@ -96,6 +100,8 @@ const Sellers: React.FC = () => {
           user_id: profile.user_id,
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
+          shop_image: profile.shop_image,
+          free_delivery: profile.free_delivery,
           created_at: profile.created_at,
           product_count: productCount || 0,
           avg_rating: avgRating
@@ -121,14 +127,14 @@ const Sellers: React.FC = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Our Sellers</h1>
-          <p className="text-muted-foreground mb-4">Discover trusted farmers and sellers</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">{t('ourSellers')}</h1>
+          <p className="text-muted-foreground mb-4">{t('discoverSellers')}</p>
           
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search sellers by name..."
+              placeholder={t('searchSellers')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -144,19 +150,30 @@ const Sellers: React.FC = () => {
           <div className="text-center py-20">
             <Store className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              {searchQuery ? 'No Sellers Found' : 'No Sellers Yet'}
+              {searchQuery ? t('noSellersFound') : t('noSellersYet')}
             </h2>
             <p className="text-muted-foreground">
-              {searchQuery ? 'Try a different search term.' : 'Check back later for new sellers.'}
+              {searchQuery ? t('tryDifferentSearch') : t('checkBackLater')}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredSellers.map((seller) => (
               <Link key={seller.user_id} to={`/store/${seller.user_id}`}>
-                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
-                  <CardContent className="p-4 flex flex-col items-center text-center">
-                    <Avatar className="w-16 h-16 mb-3 ring-2 ring-primary/20">
+                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden">
+                  {/* Shop Image Banner */}
+                  {seller.shop_image && (
+                    <div className="w-full h-24 overflow-hidden">
+                      <img 
+                        src={seller.shop_image} 
+                        alt={`${seller.full_name}'s shop`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  
+                  <CardContent className={`p-4 flex flex-col items-center text-center ${seller.shop_image ? 'pt-2' : ''}`}>
+                    <Avatar className={`w-16 h-16 mb-3 ring-2 ring-primary/20 ${seller.shop_image ? '-mt-10 border-4 border-background' : ''}`}>
                       <AvatarImage src={seller.avatar_url || undefined} alt={seller.full_name || 'Seller'} />
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {getInitials(seller.full_name)}
@@ -164,13 +181,21 @@ const Sellers: React.FC = () => {
                     </Avatar>
                     
                     <h3 className="font-semibold text-foreground text-sm mb-1 line-clamp-1">
-                      {seller.full_name || 'Seller'}
+                      {seller.full_name || t('seller')}
                     </h3>
                     
-                    <Badge variant="secondary" className="mb-2 text-xs">
-                      <Store className="w-3 h-3 mr-1" />
-                      Seller
-                    </Badge>
+                    <div className="flex items-center gap-1 mb-2">
+                      <Badge variant="secondary" className="text-xs">
+                        <Store className="w-3 h-3 mr-1" />
+                        {t('seller')}
+                      </Badge>
+                      {seller.free_delivery && (
+                        <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                          <Truck className="w-3 h-3 mr-1" />
+                          {t('freeDelivery')}
+                        </Badge>
+                      )}
+                    </div>
                     
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
