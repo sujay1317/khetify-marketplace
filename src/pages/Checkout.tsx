@@ -44,7 +44,11 @@ const Checkout: React.FC = () => {
     pincode: '',
   });
 
+  // Check if all items have free delivery
+  const allFreeDelivery = items.length > 0 && items.every(item => item.product.freeDelivery === true);
+  
   // Delivery fee calculation rules:
+  // - Free if all products have free delivery from seller
   // - ₹30 per product
   // - If cart has 5 products, charge ₹120 (discount tier)
   // - If order total < ₹100, delivery is ₹20
@@ -52,6 +56,10 @@ const Checkout: React.FC = () => {
   const totalProductCount = items.reduce((sum, item) => sum + item.quantity, 0);
   
   const calculateDeliveryFee = () => {
+    // If all items have free delivery, no charge
+    if (allFreeDelivery) {
+      return 0;
+    }
     // If order total is less than ₹100, flat ₹20 delivery
     if (totalPrice < 100) {
       return 20;
@@ -70,8 +78,7 @@ const Checkout: React.FC = () => {
   };
   
   const deliveryFee = calculateDeliveryFee();
-  const codFee = paymentMethod === 'cod' ? 20 : 0;
-  const finalTotal = totalPrice + deliveryFee + codFee;
+  const finalTotal = totalPrice + deliveryFee;
 
   const getLocalizedName = (product: typeof items[0]['product']) => {
     switch (language) {
@@ -374,10 +381,10 @@ const Checkout: React.FC = () => {
 
                 {/* Payment Options */}
                 <div className="space-y-3">
-                  {[
+                {[
                     { id: 'upi', label: 'UPI Payment', desc: 'Google Pay, PhonePe, Paytm', icon: '📱' },
                     { id: 'card', label: 'Credit/Debit Card', desc: 'Visa, Mastercard, RuPay', icon: '💳' },
-                    { id: 'cod', label: 'Cash on Delivery', desc: '+₹20 COD charges', icon: '💵' },
+                    { id: 'cod', label: 'Cash on Delivery', desc: 'Pay when you receive', icon: '💵' },
                   ].map((option) => (
                     <label
                       key={option.id}
@@ -452,14 +459,10 @@ const Checkout: React.FC = () => {
                   <span className="text-muted-foreground">
                     Delivery ({totalProductCount} items)
                   </span>
-                  <span>₹{deliveryFee}</span>
+                  <span className={allFreeDelivery ? 'text-green-600' : ''}>
+                    {allFreeDelivery ? 'FREE' : `₹${deliveryFee}`}
+                  </span>
                 </div>
-                {codFee > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">COD Charges</span>
-                    <span>₹{codFee}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-base font-bold pt-2 border-t border-border">
                   <span>{t('total')}</span>
                   <span className="text-primary">₹{finalTotal}</span>

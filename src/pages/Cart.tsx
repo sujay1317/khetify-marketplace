@@ -20,7 +20,11 @@ const Cart: React.FC = () => {
     }
   };
 
+  // Check if all items have free delivery
+  const allFreeDelivery = items.length > 0 && items.every(item => item.product.freeDelivery === true);
+  
   // Delivery fee calculation rules:
+  // - Free if all products have free delivery from seller
   // - ₹30 per product
   // - If cart has 5 products, charge ₹120 (discount tier)
   // - If order total < ₹100, delivery is ₹20
@@ -28,6 +32,10 @@ const Cart: React.FC = () => {
   const totalProductCount = items.reduce((sum, item) => sum + item.quantity, 0);
   
   const calculateDeliveryFee = () => {
+    // If all items have free delivery, no charge
+    if (allFreeDelivery) {
+      return 0;
+    }
     if (totalPrice < 100) {
       return 20;
     }
@@ -194,11 +202,19 @@ const Cart: React.FC = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Delivery ({totalProductCount} items)</span>
-                  <span className="font-medium">₹{deliveryFee}</span>
+                  <span className={`font-medium ${allFreeDelivery ? 'text-green-600' : ''}`}>
+                    {allFreeDelivery ? 'FREE' : `₹${deliveryFee}`}
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground bg-muted p-2 rounded-lg">
-                  ₹30 per item • Max ₹200 • 5 items = ₹120 special
-                </p>
+                {allFreeDelivery ? (
+                  <p className="text-xs text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded-lg">
+                    🎉 Free delivery on all items!
+                  </p>
+                ) : (
+                  <p className="text-xs text-muted-foreground bg-muted p-2 rounded-lg">
+                    ₹30 per item • Max ₹200 • 5 items = ₹120 special
+                  </p>
+                )}
                 <div className="border-t border-border pt-3 flex justify-between text-base">
                   <span className="font-semibold">{t('total')}</span>
                   <span className="font-bold text-primary text-xl">₹{finalTotal}</span>
