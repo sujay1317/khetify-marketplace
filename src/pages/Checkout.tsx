@@ -33,7 +33,7 @@ const Checkout: React.FC = () => {
   const [step, setStep] = useState<'shipping' | 'payment' | 'success'>('shipping');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('upi');
+  const [paymentMethod, setPaymentMethod] = useState<string>('cod');
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: '',
@@ -381,32 +381,23 @@ const Checkout: React.FC = () => {
 
                 {/* Payment Options */}
                 <div className="space-y-3">
-                {[
-                    { id: 'upi', label: 'UPI Payment', desc: 'Google Pay, PhonePe, Paytm', icon: '📱' },
-                    { id: 'card', label: 'Credit/Debit Card', desc: 'Visa, Mastercard, RuPay', icon: '💳' },
-                    { id: 'cod', label: 'Cash on Delivery', desc: 'Pay when you receive', icon: '💵' },
-                  ].map((option) => (
-                    <label
-                      key={option.id}
-                      className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                        paymentMethod === option.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value={option.id}
-                        checked={paymentMethod === option.id}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="w-5 h-5 text-primary"
-                      />
-                      <span className="text-2xl">{option.icon}</span>
-                      <div>
-                        <p className="font-medium">{option.label}</p>
-                        <p className="text-sm text-muted-foreground">{option.desc}</p>
-                      </div>
-                    </label>
-                  ))}
+                  <label
+                    className="flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-colors border-primary bg-primary/5"
+                  >
+                    <input
+                      type="radio"
+                      name="payment"
+                      value="cod"
+                      checked={true}
+                      readOnly
+                      className="w-5 h-5 text-primary"
+                    />
+                    <span className="text-2xl">💵</span>
+                    <div>
+                      <p className="font-medium">Cash on Delivery</p>
+                      <p className="text-sm text-muted-foreground">Pay when you receive</p>
+                    </div>
+                  </label>
                 </div>
 
                 <div className="flex gap-3 mt-6">
