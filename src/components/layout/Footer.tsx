@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone } from 'lucide-react';
 import khetifyLogo from '@/assets/khetify-logo-new.png';
 
 const Footer = () => {
@@ -36,7 +36,7 @@ const Footer = () => {
               <a href="#" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+              <a href="https://www.instagram.com/khetify_shop?igsh=NTZ3eXdvenFzZm13" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
               <a href="#" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
@@ -87,14 +87,14 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <span className="text-primary-foreground/80 text-sm">
-                  support@khetify.com
-                </span>
+                <a href="mailto:khetify.shop@gmail.com" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  khetify.shop@gmail.com
+                </a>
               </li>
               <li>
-                <span className="text-primary-foreground/80 text-sm">
-                  +91 123 456 7890
-                </span>
+                <a href="tel:+917741015729" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  +91 77410 15729
+                </a>
               </li>
             </ul>
           </div>
@@ -103,23 +103,16 @@ const Footer = () => {
           <div>
             <h4 className="font-bold text-lg mb-4 font-heading">{t('contact')}</h4>
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 mt-0.5 text-secondary" />
-                <span className="text-primary-foreground/80 text-sm">
-                  123 Krishi Bhawan, Agricultural Hub,<br />
-                  Pune, Maharashtra 411001
-                </span>
-              </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-secondary" />
-                <a href="tel:+911234567890" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  +91 123 456 7890
+                <a href="tel:+917741015729" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  +91 77410 15729
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-secondary" />
-                <a href="mailto:support@khetify.com" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  support@khetify.com
+                <a href="mailto:khetify.shop@gmail.com" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
+                  khetify.shop@gmail.com
                 </a>
               </li>
             </ul>
