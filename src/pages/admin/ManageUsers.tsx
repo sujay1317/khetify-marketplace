@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, Plus, FileBarChart, Upload, X } from 'lucide-react';
+import { Users, ArrowLeft, Plus, FileBarChart, Upload, X, Key } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -57,6 +57,10 @@ const ManageUsers: React.FC = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddSellerOpen, setIsAddSellerOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [sellerForm, setSellerForm] = useState({
     email: '',
     password: '',
@@ -131,6 +135,54 @@ const ManageUsers: React.FC = () => {
       toast.success('User role updated');
       fetchUsers();
     }
+  };
+
+  const handleChangePassword = async () => {
+    if (!session?.access_token || !selectedUser) {
+      toast.error('Not authenticated or no user selected');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-user-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          userId: selectedUser.user_id,
+          newPassword: newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update password');
+      }
+
+      toast.success(`Password updated for ${selectedUser.profile?.full_name || 'user'}`);
+      setIsPasswordDialogOpen(false);
+      setNewPassword('');
+      setSelectedUser(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update password');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  const openPasswordDialog = (user: UserWithRole) => {
+    setSelectedUser(user);
+    setNewPassword('');
+    setIsPasswordDialogOpen(true);
   };
 
   const handleCreateSeller = async (e: React.FormEvent) => {
@@ -391,6 +443,18 @@ const ManageUsers: React.FC = () => {
                                 <SelectItem value="admin">Admin</SelectItem>
                               </SelectContent>
                             </Select>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => openPasswordDialog(user)}
+                                >
+                                  <Key className="w-4 h-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Change Password</TooltipContent>
+                            </Tooltip>
                             {user.role === 'seller' && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -414,6 +478,37 @@ const ManageUsers: React.FC = () => {
               </Table>
             </Card>
           )}
+
+          {/* Password Change Dialog */}
+          <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change Password</DialogTitle>
+                <DialogDescription>
+                  Set a new password for {selectedUser?.profile?.full_name || 'this user'}.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                  />
+                </div>
+                <Button 
+                  onClick={handleChangePassword} 
+                  className="w-full"
+                  disabled={isUpdatingPassword || newPassword.length < 6}
+                >
+                  {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
     </div>
