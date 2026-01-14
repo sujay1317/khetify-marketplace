@@ -15,7 +15,10 @@ import {
   CheckCircle,
   Truck,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Card } from '@/components/ui/card';
@@ -53,6 +56,11 @@ const CustomerProfile: React.FC = () => {
   const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [editForm, setEditForm] = useState({
     full_name: '',
     phone: ''
@@ -132,6 +140,35 @@ const CustomerProfile: React.FC = () => {
   const handleLogout = async () => {
     await signOut();
     toast.success('Logged out successfully');
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setPasswordLoading(true);
+    
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      toast.error('Failed to update password: ' + error.message);
+    } else {
+      toast.success('Password updated successfully');
+      setIsPasswordModalOpen(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+    
+    setPasswordLoading(false);
   };
 
   const getStatusIcon = (status: string | null) => {
@@ -427,6 +464,23 @@ const CustomerProfile: React.FC = () => {
                 </div>
               </Card>
 
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Key className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Change Password</p>
+                      <p className="text-sm text-muted-foreground">Update your account password</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setIsPasswordModalOpen(true)}>
+                    Change
+                  </Button>
+                </div>
+              </Card>
+
               <Card className="p-4 border-destructive/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -446,6 +500,59 @@ const CustomerProfile: React.FC = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Password Change Modal */}
+        {isPasswordModalOpen && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <Card className="w-full max-w-md p-6 animate-scale-in">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Change Password</h2>
+                <Button variant="ghost" size="icon" onClick={() => setIsPasswordModalOpen(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">New Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Confirm Password</label>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setIsPasswordModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="flex-1" onClick={handleChangePassword} disabled={passwordLoading}>
+                    {passwordLoading ? 'Updating...' : 'Update Password'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );

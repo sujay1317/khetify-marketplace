@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, ShoppingCart, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, LayoutDashboard, Upload, X } from 'lucide-react';
+import { Package, ShoppingCart, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, LayoutDashboard, Upload, X, Key, EyeIcon, EyeOff } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -55,7 +55,7 @@ const SellerDashboard: React.FC = () => {
   const { user, profile, signOut } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'orders' | 'settings'>('overview');
   const [products, setProducts] = useState<Product[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +65,11 @@ const SellerDashboard: React.FC = () => {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<{id: string, image_url: string}[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form state
@@ -342,6 +347,35 @@ const SellerDashboard: React.FC = () => {
     navigate('/');
   };
 
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    setPasswordLoading(true);
+    
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      toast.error('Failed to update password: ' + error.message);
+    } else {
+      toast.success('Password updated successfully');
+      setIsPasswordModalOpen(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+    
+    setPasswordLoading(false);
+  };
+
   const totalRevenue = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const pendingApproval = products.filter(p => !p.is_approved).length;
 
@@ -390,6 +424,15 @@ const SellerDashboard: React.FC = () => {
                 >
                   <ShoppingCart className="w-5 h-5" />
                   Orders
+                </button>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    activeTab === 'settings' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  }`}
+                >
+                  <Key className="w-5 h-5" />
+                  Settings
                 </button>
                 <button
                   onClick={handleLogout}
@@ -751,8 +794,101 @@ const SellerDashboard: React.FC = () => {
                 )}
               </div>
             )}
+
+            {activeTab === 'settings' && (
+              <div className="space-y-6">
+                <h1 className="text-2xl font-bold font-heading">Settings</h1>
+                
+                <Card className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Key className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold">Change Password</p>
+                        <p className="text-sm text-muted-foreground">Update your account password</p>
+                      </div>
+                    </div>
+                    <Button onClick={() => setIsPasswordModalOpen(true)}>
+                      Change Password
+                    </Button>
+                  </div>
+                </Card>
+
+                <Card className="p-6 border-destructive/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <LogOut className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-destructive">Logout</p>
+                        <p className="text-sm text-muted-foreground">Sign out from your account</p>
+                      </div>
+                    </div>
+                    <Button variant="destructive" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Password Change Modal */}
+        {isPasswordModalOpen && (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <Card className="w-full max-w-md p-6 animate-scale-in">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Change Password</h2>
+                <Button variant="ghost" size="icon" onClick={() => setIsPasswordModalOpen(false)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">New Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Confirm Password</label>
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button variant="outline" className="flex-1" onClick={() => setIsPasswordModalOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="flex-1" onClick={handleChangePassword} disabled={passwordLoading}>
+                    {passwordLoading ? 'Updating...' : 'Update Password'}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );
