@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ArrowLeft, Plus, FileBarChart, Upload, X, Key } from 'lucide-react';
+import { Users, ArrowLeft, Plus, FileBarChart, Upload, X, Key, Trash2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -39,6 +39,16 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface UserWithRole {
   id: string;
@@ -71,6 +81,8 @@ const ManageUsers: React.FC = () => {
   const [shopImage, setShopImage] = useState<File | null>(null);
   const [shopImagePreview, setShopImagePreview] = useState<string | null>(null);
   const [isCreatingSeller, setIsCreatingSeller] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleShopImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -183,6 +195,41 @@ const ManageUsers: React.FC = () => {
     setSelectedUser(user);
     setNewPassword('');
     setIsPasswordDialogOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!session?.access_token || !userToDelete) {
+      toast.error('Not authenticated or no user selected');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          userId: userToDelete.user_id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      toast.success(`${userToDelete.profile?.full_name || 'User'} deleted successfully`);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete user');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleCreateSeller = async (e: React.FormEvent) => {
@@ -469,6 +516,21 @@ const ManageUsers: React.FC = () => {
                                 <TooltipContent>View Order Report</TooltipContent>
                               </Tooltip>
                             )}
+                            {user.role !== 'admin' && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive"
+                                    onClick={() => setUserToDelete(user)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Delete User</TooltipContent>
+                              </Tooltip>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -509,6 +571,30 @@ const ManageUsers: React.FC = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Delete User Confirmation Dialog */}
+          <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete User</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete {userToDelete?.profile?.full_name || 'this user'}? 
+                  This will permanently remove their account and all associated data (products, orders, reviews, etc.). 
+                  This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleDeleteUser}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete User'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </main>
     </div>
