@@ -66,32 +66,93 @@ serve(async (req) => {
       });
     }
 
-    // Create the user
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: fullName,
-        phone: phone || null,
-        role: "seller",
-        free_delivery: freeDelivery || false,
-      },
-    });
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
 
-    if (createError) {
-      return new Response(JSON.stringify({ error: createError.message }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let userId: string;
+
+    if (existingUser) {
+      // User exists - update their role to seller
+      userId = existingUser.id;
+
+      // Update password if provided
+      if (password) {
+        await supabaseAdmin.auth.admin.updateUserById(userId, { password });
+      }
+
+      // Update or insert user role to seller
+      const { data: existingRole } = await supabaseAdmin
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existingRole) {
+        await supabaseAdmin
+          .from("user_roles")
+          .update({ role: "seller" })
+          .eq("user_id", userId);
+      } else {
+        await supabaseAdmin
+          .from("user_roles")
+          .insert({ user_id: userId, role: "seller" });
+      }
+
+      // Update profile
+      const { data: existingProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (existingProfile) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({ 
+            full_name: fullName, 
+            phone: phone || null, 
+            free_delivery: freeDelivery || false 
+          })
+          .eq("user_id", userId);
+      } else {
+        await supabaseAdmin
+          .from("profiles")
+          .insert({ 
+            user_id: userId, 
+            full_name: fullName, 
+            phone: phone || null, 
+            free_delivery: freeDelivery || false 
+          });
+      }
+    } else {
+      // Create new user
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          phone: phone || null,
+          role: "seller",
+          free_delivery: freeDelivery || false,
+        },
       });
-    }
 
-    // Update the profile with free_delivery setting
-    if (newUser?.user) {
+      if (createError) {
+        return new Response(JSON.stringify({ error: createError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      userId = newUser.user.id;
+
+      // Update the profile with free_delivery setting
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({ free_delivery: freeDelivery || false })
-        .eq('user_id', newUser.user.id);
+        .eq('user_id', userId);
 
       if (profileError) {
         console.error('Error updating profile with free_delivery:', profileError);
@@ -101,8 +162,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Seller created successfully",
-        user: { id: newUser.user.id, email: newUser.user.email }
+        message: existingUser ? "Existing user converted to seller" : "Seller created successfully",
+        user: { id: userId, email }
       }),
       {
         status: 200,
