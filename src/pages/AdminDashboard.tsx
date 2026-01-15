@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Package, ShoppingCart, TrendingUp, Check, X, 
-  LogOut, LayoutDashboard, BarChart3, Ticket 
+  LogOut, LayoutDashboard, BarChart3, Ticket, Trash2 
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Product {
   id: string;
@@ -62,6 +72,8 @@ const AdminDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchAllData();
@@ -136,6 +148,31 @@ const AdminDashboard: React.FC = () => {
     } else {
       toast.success(approve ? 'Product approved!' : 'Product rejected');
       fetchProducts();
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete product images first
+      await supabase.from('product_images').delete().eq('product_id', productToDelete.id);
+      
+      // Delete the product
+      const { error } = await supabase.from('products').delete().eq('id', productToDelete.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(`${productToDelete.name} deleted successfully`);
+      setProductToDelete(null);
+      fetchProducts();
+    } catch (error) {
+      toast.error('Failed to delete product');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -404,6 +441,14 @@ const AdminDashboard: React.FC = () => {
                                   <span className="ml-1">Unapprove</span>
                                 </Button>
                               )}
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-destructive hover:text-destructive"
+                                onClick={() => setProductToDelete(product)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -425,6 +470,29 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Delete Product Confirmation Dialog */}
+      <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{productToDelete?.name}"? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteProduct}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete Product'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
