@@ -406,7 +406,7 @@ const ProductDetail: React.FC = () => {
               <Button
                 variant="hero"
                 size="lg"
-                className="flex-1 gap-2 h-12"
+                className="flex-1 gap-2 h-12 text-base"
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
               >
@@ -420,7 +420,7 @@ const ProductDetail: React.FC = () => {
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full gap-2 h-12"
+                className="w-full gap-2 h-12 rounded-full border-2 border-primary text-primary hover:bg-primary hover:text-white"
               >
                 View All Products from {product.sellerName}
               </Button>
