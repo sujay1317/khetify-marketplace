@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import khetifyLogo from '@/assets/khetify-logo-new.png';
+import khetifyLogo from '@/assets/khetify-logo-cart.png';
 import { ShoppingCart, Menu, Search, User, Globe, Heart, LayoutDashboard, Package, LogOut, Sprout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
