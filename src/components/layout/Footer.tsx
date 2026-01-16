@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone } from 'lucide-react';
-import khetifyLogo from '@/assets/khetify-logo-new.png';
+import khetifyLogo from '@/assets/khetify-logo-cart.png';
 
 const Footer = () => {
   const { t } = useLanguage();
