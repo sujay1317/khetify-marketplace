@@ -16,7 +16,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent/10 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         // Khetify custom variants
-        hero: "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg hover:shadow-glow hover:scale-[1.02] font-bold",
+        hero: "bg-gradient-to-r from-primary via-primary to-accent text-white shadow-lg hover:shadow-glow hover:scale-[1.02] font-bold rounded-full",
         gold: "bg-gradient-to-r from-secondary to-sunset text-secondary-foreground shadow-md hover:shadow-lg font-bold",
         glass: "bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30",
         soft: "bg-primary/10 text-primary hover:bg-primary/20",
