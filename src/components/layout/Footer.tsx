@@ -20,10 +20,14 @@ const Footer = () => {
                 alt="KHETIFY Logo" 
                 className="w-12 h-12 object-contain bg-white/90 rounded-xl p-1"
               />
-              <span className="text-xl font-bold font-heading">
-                <span className="text-primary-foreground">KHETIFY</span>
-                <span className="text-secondary">.shop</span>
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className="text-xl font-extrabold font-heading tracking-wide text-primary-foreground uppercase">
+                  Khetify
+                </span>
+                <span className="text-[10px] font-medium tracking-[0.2em] text-primary-foreground/70 uppercase">
+                  Farm To Home
+                </span>
+              </div>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-6">
               Your trusted partner for quality agricultural products. 
@@ -125,7 +129,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/60 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} KHETIFY.shop. All rights reserved. Made with ❤️ for Indian Farmers.
+              © {new Date().getFullYear()} Khetify - Farm To Home. All rights reserved. Made with ❤️ for Indian Farmers.
             </p>
             <div className="flex items-center gap-4">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-6 opacity-70" />
