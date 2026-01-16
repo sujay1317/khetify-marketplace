@@ -84,14 +84,10 @@ const Header = () => {
                 alt="KHETIFY Logo" 
                 className="w-10 h-10 md:w-12 md:h-12 object-contain group-hover:scale-105 transition-transform duration-300"
               />
-              <div className="flex flex-col leading-none">
-                <span className="text-lg md:text-xl font-extrabold font-heading tracking-wide text-primary uppercase">
-                  Khetify
-                </span>
-                <span className="text-[10px] md:text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-                  Farm To Home
-                </span>
-              </div>
+              <span className="text-lg md:text-xl font-bold font-heading tracking-tight">
+                <span className="text-primary">KHETIFY</span>
+                <span className="text-secondary">.shop</span>
+              </span>
             </Link>
           </div>
 
