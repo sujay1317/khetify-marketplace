@@ -358,6 +358,37 @@ const translations: Translations = {
   // Actions on products
   organicProduct: { en: 'Organic Product', hi: 'जैविक उत्पाद', mr: 'सेंद्रिय उत्पादन' },
   verifiedSeller: { en: 'Verified Seller', hi: 'सत्यापित विक्रेता', mr: 'सत्यापित विक्रेता' },
+  
+  // Seller Dashboard Specific
+  sellerDashboard: { en: 'Seller Dashboard', hi: 'विक्रेता डैशबोर्ड', mr: 'विक्रेता डॅशबोर्ड' },
+  addNewProduct: { en: 'Add New Product', hi: 'नया उत्पाद जोड़ें', mr: 'नवीन उत्पादन जोडा' },
+  productImages: { en: 'Product Images (up to 5)', hi: 'उत्पाद छवियां (अधिकतम 5)', mr: 'उत्पादन प्रतिमा (जास्तीत जास्त 5)' },
+  addImages: { en: 'Add images', hi: 'छवियां जोड़ें', mr: 'प्रतिमा जोडा' },
+  maxFileSize: { en: 'Max 5MB each', hi: 'प्रत्येक अधिकतम 5MB', mr: 'प्रत्येकी जास्तीत जास्त 5MB' },
+  uploading: { en: 'Uploading...', hi: 'अपलोड हो रहा है...', mr: 'अपलोड होत आहे...' },
+  updateProduct: { en: 'Update Product', hi: 'उत्पाद अपडेट करें', mr: 'उत्पादन अद्यतनित करा' },
+  startAddingProducts: { en: 'Start adding products to sell on KhetiFy', hi: 'KhetiFy पर बेचने के लिए उत्पाद जोड़ना शुरू करें', mr: 'KhetiFy वर विक्रीसाठी उत्पादने जोडणे सुरू करा' },
+  ordersForProducts: { en: 'Orders for your products will appear here', hi: 'आपके उत्पादों के ऑर्डर यहां दिखाई देंगे', mr: 'तुमच्या उत्पादनांचे ऑर्डर येथे दिसतील' },
+  pendingAdminApproval: { en: 'products pending admin approval', hi: 'उत्पाद व्यवस्थापक अनुमोदन की प्रतीक्षा में', mr: 'उत्पादने प्रशासक मंजुरीच्या प्रतीक्षेत' },
+  updatePassword: { en: 'Update Password', hi: 'पासवर्ड अपडेट करें', mr: 'पासवर्ड अद्यतनित करा' },
+  updating: { en: 'Updating...', hi: 'अपडेट हो रहा है...', mr: 'अद्यतनित होत आहे...' },
+  enterNewPassword: { en: 'Enter new password', hi: 'नया पासवर्ड दर्ज करें', mr: 'नवीन पासवर्ड प्रविष्ट करा' },
+  confirmNewPassword: { en: 'Confirm new password', hi: 'नया पासवर्ड पुष्टि करें', mr: 'नवीन पासवर्ड पुष्टी करा' },
+  updateAccountPassword: { en: 'Update your account password', hi: 'अपना खाता पासवर्ड अपडेट करें', mr: 'तुमचा खाते पासवर्ड अद्यतनित करा' },
+  signOutFromAccount: { en: 'Sign out from your account', hi: 'अपने खाते से साइन आउट करें', mr: 'तुमच्या खात्यातून साइन आउट करा' },
+  uploadBannerForStore: { en: 'Upload a banner image for your store page', hi: 'अपने स्टोर पेज के लिए बैनर छवि अपलोड करें', mr: 'तुमच्या स्टोअर पृष्ठासाठी बॅनर प्रतिमा अपलोड करा' },
+  clickToUpload: { en: 'Click to upload shop image', hi: 'दुकान की छवि अपलोड करने के लिए क्लिक करें', mr: 'दुकानाची प्रतिमा अपलोड करण्यासाठी क्लिक करा' },
+  saveShopImage: { en: 'Save Shop Image', hi: 'दुकान छवि सहेजें', mr: 'दुकान प्रतिमा जतन करा' },
+  deleteConfirm: { en: 'Are you sure you want to delete this product?', hi: 'क्या आप वाकई इस उत्पाद को हटाना चाहते हैं?', mr: 'तुम्हाला खात्री आहे की तुम्ही हे उत्पादन हटवू इच्छिता?' },
+  perKgUnit: { en: 'Per Kg', hi: 'प्रति किलो', mr: 'प्रति किलो' },
+  perGram: { en: 'Per Gram', hi: 'प्रति ग्राम', mr: 'प्रति ग्राम' },
+  perML: { en: 'Per ML', hi: 'प्रति एमएल', mr: 'प्रति एमएल' },
+  perLiter: { en: 'Per Liter', hi: 'प्रति लीटर', mr: 'प्रति लीटर' },
+  perPiece: { en: 'Per Piece', hi: 'प्रति पीस', mr: 'प्रति तुकडा' },
+  perPack: { en: 'Per Pack', hi: 'प्रति पैक', mr: 'प्रति पॅक' },
+  category: { en: 'Category', hi: 'श्रेणी', mr: 'श्रेणी' },
+  youHave: { en: 'You have', hi: 'आपके पास', mr: 'तुमच्याकडे' },
+  madeWithLove: { en: 'Made with ❤️ for Indian Farmers', hi: '❤️ भारतीय किसानों के लिए बनाया गया', mr: '❤️ भारतीय शेतकऱ्यांसाठी बनवले' },
 };
 
 interface LanguageContextType {

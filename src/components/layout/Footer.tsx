@@ -124,7 +124,7 @@ const Footer = memo(() => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/60 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} KHETIFY.shop. {t('allRightsReserved')}. Made with ❤️ for Indian Farmers.
+              © {new Date().getFullYear()} KHETIFY.shop. {t('allRightsReserved')}. {t('madeWithLove')}
             </p>
             <div className="flex items-center gap-4">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-6 opacity-70" />
