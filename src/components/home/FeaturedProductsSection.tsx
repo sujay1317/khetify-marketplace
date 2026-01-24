@@ -83,7 +83,7 @@ const FeaturedProductsSection: React.FC = memo(() => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-heading">{t('featured')}</h2>
-            <p className="text-muted-foreground text-sm mt-1">Fresh picks for you</p>
+            <p className="text-muted-foreground text-sm mt-1">{t('freshPicks')}</p>
           </div>
           <Link to="/products">
             <Button variant="ghost" size="sm" className="gap-2 group">
