@@ -27,7 +27,7 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
     const baseItems = [
       { path: '/', label: t('home'), icon: Home },
       { path: '/products', label: t('products'), icon: ShoppingBag },
-      { path: '/forum', label: 'Forum', icon: MessageSquare },
+      { path: '/forum', label: t('farmerForum'), icon: MessageSquare },
     ];
 
     if (!user) return baseItems;
@@ -35,7 +35,7 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
     if (role === 'admin') {
       return [
         ...baseItems,
-        { path: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard },
+        { path: '/admin', label: t('dashboard'), icon: LayoutDashboard },
         { path: '/orders', label: t('orders'), icon: ClipboardList },
       ];
     }
@@ -43,8 +43,8 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
     if (role === 'seller') {
       return [
         ...baseItems,
-        { path: '/seller', label: 'Seller Dashboard', icon: LayoutDashboard },
-        { path: '/farmer-corner', label: 'Farmer Corner', icon: Sprout },
+        { path: '/seller', label: t('dashboard'), icon: LayoutDashboard },
+        { path: '/farmer-corner', label: t('farmerCorner'), icon: Sprout },
         { path: '/orders', label: t('orders'), icon: ClipboardList },
       ];
     }
@@ -53,7 +53,7 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
     return [
       ...baseItems,
       { path: '/orders', label: t('orders'), icon: ClipboardList },
-      { path: '/wishlist', label: 'Wishlist', icon: Heart },
+      { path: '/wishlist', label: t('wishlist'), icon: Heart },
     ];
   }, [user, role, t]);
 
@@ -129,7 +129,7 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
             <div className="px-4 py-2">
               <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                Language
+                {t('settings')}
               </p>
               <div className="flex gap-2">
                 {(Object.keys(languageNames) as Language[]).map((lang) => (
@@ -156,7 +156,7 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
                 <Link to="/profile" onClick={() => setOpen(false)}>
                   <Button variant="outline" className="w-full justify-start gap-2">
                     <User className="w-4 h-4" />
-                    My Profile
+                    {t('profile')}
                   </Button>
                 </Link>
                 <Button 
@@ -165,14 +165,14 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
                   onClick={() => { signOut(); setOpen(false); }}
                 >
                   <LogOut className="w-4 h-4" />
-                  Logout
+                  {t('logout')}
                 </Button>
               </>
             ) : (
               <Link to="/login" onClick={() => setOpen(false)}>
                 <Button className="w-full justify-start gap-2">
                   <User className="w-4 h-4" />
-                  Login / Sign Up
+                  {t('login')} / {t('signup')}
                 </Button>
               </Link>
             )}

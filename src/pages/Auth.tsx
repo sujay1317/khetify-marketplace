@@ -88,7 +88,7 @@ const Auth: React.FC = () => {
               <span className="text-secondary">.shop</span>
             </h1>
             <p className="text-muted-foreground text-sm mt-2">
-              {isLogin ? 'Sign in to continue shopping' : 'Join KHETIFY.shop today'}
+              {isLogin ? t('welcomeBack') : t('createAccount')}
             </p>
           </div>
 
@@ -117,14 +117,14 @@ const Auth: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">I am a:</label>
+                  <label className="text-sm font-medium mb-2 block">{t('seller')}:</label>
                   <Select value={selectedRole} onValueChange={(value: AppRole) => setSelectedRole(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="customer">👤 Customer - Buy products</SelectItem>
-                      <SelectItem value="seller">🌾 Seller - Sell my products</SelectItem>
+                      <SelectItem value="customer">👤 {t('profile')} - {t('shopNow')}</SelectItem>
+                      <SelectItem value="seller">🌾 {t('seller')} - {t('products')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -161,13 +161,13 @@ const Auth: React.FC = () => {
             </div>
 
             <Button type="submit" variant="default" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Please wait...' : isLogin ? t('login') : t('signup')}
+              {isLoading ? t('loading') : isLogin ? t('login') : t('signup')}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">
-              {isLogin ? "Don't have an account? " : 'Already have an account? '}
+              {isLogin ? t('dontHaveAccount') + ' ' : t('alreadyHaveAccount') + ' '}
             </span>
             <button
               onClick={() => setIsLogin(!isLogin)}

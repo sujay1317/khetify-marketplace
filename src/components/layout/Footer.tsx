@@ -26,8 +26,7 @@ const Footer = memo(() => {
               </span>
             </Link>
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-6">
-              Your trusted partner for quality agricultural products. 
-              Empowering farmers with the best seeds, fertilizers, and tools.
+              {t('connectingFarmers')}
             </p>
             <div className="flex gap-3">
               <a href="#" className="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
@@ -47,7 +46,7 @@ const Footer = memo(() => {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-lg mb-4 font-heading">Quick Links</h4>
+            <h4 className="font-bold text-lg mb-4 font-heading">{t('quickLinks')}</h4>
             <ul className="space-y-3">
               <li>
                 <Link to="/products" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
@@ -66,7 +65,7 @@ const Footer = memo(() => {
               </li>
               <li>
                 <Link to="/sellers" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  Our Sellers
+                  {t('ourSellers')}
                 </Link>
               </li>
             </ul>
@@ -74,16 +73,16 @@ const Footer = memo(() => {
 
           {/* Support */}
           <div>
-            <h4 className="font-bold text-lg mb-4 font-heading">Support</h4>
+            <h4 className="font-bold text-lg mb-4 font-heading">{t('support')}</h4>
             <ul className="space-y-3">
               <li>
                 <Link to="/forum" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  Community Forum
+                  {t('farmerForum')}
                 </Link>
               </li>
               <li>
                 <Link to="/farmer-corner" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors text-sm">
-                  Farmer Corner
+                  {t('farmerCorner')}
                 </Link>
               </li>
               <li>
@@ -125,7 +124,7 @@ const Footer = memo(() => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-primary-foreground/60 text-sm text-center md:text-left">
-              © {new Date().getFullYear()} KHETIFY.shop. All rights reserved. Made with ❤️ for Indian Farmers.
+              © {new Date().getFullYear()} KHETIFY.shop. {t('allRightsReserved')}. Made with ❤️ for Indian Farmers.
             </p>
             <div className="flex items-center gap-4">
               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/124px-PayPal.svg.png" alt="PayPal" className="h-6 opacity-70" />

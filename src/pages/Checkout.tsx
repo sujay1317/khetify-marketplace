@@ -198,7 +198,7 @@ const Checkout: React.FC = () => {
         <main className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
           <Link to="/products">
-            <Button variant="hero">Start Shopping</Button>
+            <Button variant="hero">{t('shopNow')}</Button>
           </Link>
         </main>
         <Footer />
@@ -215,22 +215,22 @@ const Checkout: React.FC = () => {
             <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-accent/10 flex items-center justify-center">
               <CheckCircle2 className="w-12 h-12 text-accent" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Order Placed Successfully!</h1>
+            <h1 className="text-2xl font-bold mb-2">{t('orderPlaced')}</h1>
             <p className="text-muted-foreground mb-2">
-              Thank you for your order. Your order ID is:
+              {t('thankYou')}
             </p>
             <p className="text-xl font-mono font-bold text-primary mb-6">
               #{orderId.slice(0, 8).toUpperCase()}
             </p>
             <p className="text-sm text-muted-foreground mb-8">
-              You will receive an SMS confirmation shortly with tracking details.
+              {t('orderConfirmed')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/orders">
-                <Button variant="default">Track Order</Button>
+                <Button variant="default">{t('trackOrder')}</Button>
               </Link>
               <Link to="/products">
-                <Button variant="outline">Continue Shopping</Button>
+                <Button variant="outline">{t('continueShopping')}</Button>
               </Link>
             </div>
           </div>
@@ -250,7 +250,7 @@ const Checkout: React.FC = () => {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Cart
+          {t('back')} {t('cart')}
         </Link>
 
         <h1 className="text-2xl md:text-3xl font-bold font-heading mb-6">
@@ -261,7 +261,7 @@ const Checkout: React.FC = () => {
         {!user && (
           <Card className="p-4 mb-6 border-secondary bg-secondary/10">
             <p className="text-sm">
-              ⚠️ Please <Link to="/login" className="text-primary font-semibold underline">login</Link> to place your order and track it later.
+              ⚠️ {t('login')} <Link to="/login" className="text-primary font-semibold underline">{t('login')}</Link>
             </p>
           </Card>
         )}
@@ -272,14 +272,14 @@ const Checkout: React.FC = () => {
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'shipping' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
               1
             </div>
-            <span className="hidden sm:inline font-medium">Shipping</span>
+            <span className="hidden sm:inline font-medium">{t('shippingAddress')}</span>
           </div>
           <div className="flex-1 h-0.5 bg-muted" />
           <div className={`flex items-center gap-2 ${step === 'payment' ? 'text-primary' : 'text-muted-foreground'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step === 'payment' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
               2
             </div>
-            <span className="hidden sm:inline font-medium">Payment</span>
+            <span className="hidden sm:inline font-medium">{t('payment')}</span>
           </div>
         </div>
 
@@ -290,7 +290,7 @@ const Checkout: React.FC = () => {
               <Card className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <Truck className="w-6 h-6 text-primary" />
-                  <h2 className="text-lg font-bold">Shipping Address</h2>
+                  <h2 className="text-lg font-bold">{t('shippingAddress')}</h2>
                 </div>
                 <form onSubmit={handleShippingSubmit} className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
@@ -299,7 +299,7 @@ const Checkout: React.FC = () => {
                       <Input
                         value={shippingInfo.fullName}
                         onChange={(e) => setShippingInfo({...shippingInfo, fullName: e.target.value})}
-                        placeholder="Enter your full name"
+                        placeholder={t('enterName')}
                         required
                       />
                     </div>
@@ -315,11 +315,11 @@ const Checkout: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1 block">Address *</label>
+                    <label className="text-sm font-medium mb-1 block">{t('address')} *</label>
                     <Input
                       value={shippingInfo.address}
                       onChange={(e) => setShippingInfo({...shippingInfo, address: e.target.value})}
-                      placeholder="House/Flat No., Street, Area"
+                      placeholder={t('enterAddress')}
                       required
                     />
                   </div>

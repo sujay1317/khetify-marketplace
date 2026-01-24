@@ -162,10 +162,10 @@ const CustomerOrders: React.FC = () => {
         <Header />
         <main className="container mx-auto px-4 py-12 text-center">
           <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Please Login</h1>
-          <p className="text-muted-foreground mb-6">Login to view your orders</p>
+          <h1 className="text-2xl font-bold mb-2">{t('login')}</h1>
+          <p className="text-muted-foreground mb-6">{t('login')} {t('orders')}</p>
           <Link to="/login">
-            <Button>Login</Button>
+            <Button>{t('login')}</Button>
           </Link>
         </main>
       </div>
@@ -179,12 +179,12 @@ const CustomerOrders: React.FC = () => {
         <h1 className="text-2xl font-bold font-heading mb-6">{t('orders')}</h1>
 
         {loading ? (
-          <div className="text-center py-12">Loading...</div>
+          <div className="text-center py-12">{t('loading')}</div>
         ) : orders.length === 0 ? (
           <Card className="p-12 text-center">
             <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-            <p className="text-muted-foreground mb-6">Start shopping to see your orders here</p>
+            <h3 className="text-lg font-semibold mb-2">{t('noOrders')}</h3>
+            <p className="text-muted-foreground mb-6">{t('continueShopping')}</p>
             <Link to="/products">
               <Button>{t('shopNow')}</Button>
             </Link>
@@ -197,7 +197,7 @@ const CustomerOrders: React.FC = () => {
                   <div className="flex items-center gap-4">
                     {getStatusIcon(order.status)}
                     <div>
-                      <p className="font-semibold">Order #{order.id.slice(0, 8)}</p>
+                      <p className="font-semibold">{t('orderNumber')}{order.id.slice(0, 8)}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(order.created_at).toLocaleDateString('en-IN', {
                           year: 'numeric',
@@ -209,7 +209,7 @@ const CustomerOrders: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4">
                     <Badge className={getStatusColor(order.status)}>
-                      {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
+                      {order.status ? t(order.status) : t('pending')}
                     </Badge>
                     <span className="font-bold text-lg">₹{order.total}</span>
                   </div>
@@ -245,20 +245,25 @@ const CustomerOrders: React.FC = () => {
                           }}
                         />
                       </div>
-                      {['pending', 'confirmed', 'shipped', 'delivered'].map((step, idx) => {
+                      {[
+                        { key: 'pending', label: t('pending') },
+                        { key: 'confirmed', label: t('confirmed') },
+                        { key: 'shipped', label: t('shipped') },
+                        { key: 'delivered', label: t('delivered') }
+                      ].map((step, idx) => {
                         const isActive = 
                           (order.status === 'pending' && idx === 0) ||
                           (order.status === 'confirmed' && idx <= 1) ||
                           (order.status === 'shipped' && idx <= 2) ||
                           (order.status === 'delivered' && idx <= 3);
                         return (
-                          <div key={step} className="relative z-10 flex flex-col items-center">
+                          <div key={step.key} className="relative z-10 flex flex-col items-center">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                               isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                             }`}>
                               {idx + 1}
                             </div>
-                            <span className="text-xs mt-1 capitalize">{step}</span>
+                            <span className="text-xs mt-1">{step.label}</span>
                           </div>
                         );
                       })}
@@ -266,12 +271,11 @@ const CustomerOrders: React.FC = () => {
                   </div>
                 )}
 
-                {/* Payment Method */}
                 <div className="mt-4 pt-4 border-t flex justify-between items-center text-sm text-muted-foreground">
-                  <span>Payment: {order.payment_method?.toUpperCase() || 'COD'}</span>
+                  <span>{t('payment')}: {order.payment_method?.toUpperCase() || 'COD'}</span>
                   {order.shipping_address && (
                     <span>
-                      Delivery to: {order.shipping_address.city}, {order.shipping_address.state}
+                      {t('delivery')}: {order.shipping_address.city}, {order.shipping_address.state}
                     </span>
                   )}
                 </div>

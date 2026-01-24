@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SellerStats {
   totalProducts: number;
@@ -34,6 +35,7 @@ interface RecentOrder {
 
 const SellerHome: React.FC = () => {
   const { profile, user } = useAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<SellerStats>({
     totalProducts: 0,
     approvedProducts: 0,
@@ -98,16 +100,16 @@ const SellerHome: React.FC = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return t('goodMorning');
+    if (hour < 17) return t('goodAfternoon');
+    return t('goodEvening');
   };
 
   const quickActions = [
-    { icon: Plus, label: 'Add Product', path: '/seller', color: 'bg-primary', description: 'List a new product' },
-    { icon: Package, label: 'My Products', path: '/seller', color: 'bg-emerald-600', description: 'Manage listings' },
-    { icon: ShoppingCart, label: 'Orders', path: '/seller', color: 'bg-blue-600', description: 'View orders' },
-    { icon: Store, label: 'My Store', path: `/store/${user?.id}`, color: 'bg-purple-600', description: 'Public store page' },
+    { icon: Plus, label: t('addProduct'), path: '/seller', color: 'bg-primary', description: t('addNew') },
+    { icon: Package, label: t('myProducts'), path: '/seller', color: 'bg-emerald-600', description: t('manageListings') },
+    { icon: ShoppingCart, label: t('orders'), path: '/seller', color: 'bg-blue-600', description: t('viewDetails') },
+    { icon: Store, label: t('viewMyStore'), path: `/store/${user?.id}`, color: 'bg-purple-600', description: t('viewStore') },
   ];
 
   const sellerTips = [
@@ -139,10 +141,10 @@ const SellerHome: React.FC = () => {
                     {profile?.full_name?.split(' ')[0] || 'Seller'}! 🌾
                   </h1>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="default" className="bg-primary">Verified Seller</Badge>
+                    <Badge variant="default" className="bg-primary">{t('verifiedSeller')}</Badge>
                     {stats.approvedProducts > 0 && (
                       <Badge variant="outline" className="border-primary/50">
-                        {stats.approvedProducts} Active Listings
+                        {stats.approvedProducts} {t('approved')}
                       </Badge>
                     )}
                   </div>
@@ -152,13 +154,13 @@ const SellerHome: React.FC = () => {
                 <Link to="/seller" className="flex-1 sm:flex-none">
                   <Button className="w-full gap-2">
                     <Plus className="w-4 h-4" />
-                    Add Product
+                    {t('addProduct')}
                   </Button>
                 </Link>
                 <Link to={`/store/${user?.id}`} className="flex-1 sm:flex-none">
                   <Button variant="outline" className="w-full gap-2">
                     <Eye className="w-4 h-4" />
-                    View Store
+                    {t('viewStore')}
                   </Button>
                 </Link>
               </div>
@@ -172,12 +174,12 @@ const SellerHome: React.FC = () => {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Total Products</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{t('totalProducts')}</p>
                   <p className="text-2xl sm:text-3xl font-bold mt-1">{stats.totalProducts}</p>
                   {stats.pendingProducts > 0 && (
                     <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
-                      {stats.pendingProducts} pending
+                      {stats.pendingProducts} {t('pending')}
                     </p>
                   )}
                 </div>
@@ -192,7 +194,7 @@ const SellerHome: React.FC = () => {
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Total Orders</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{t('totalOrders')}</p>
                   <p className="text-2xl sm:text-3xl font-bold mt-1">{stats.totalOrders}</p>
                 </div>
                 <div className="p-2 sm:p-3 rounded-xl bg-blue-500/10">
