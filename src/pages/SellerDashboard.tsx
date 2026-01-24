@@ -458,8 +458,8 @@ const SellerDashboard: React.FC = () => {
                   <span className="text-xl">🌾</span>
                 </div>
                 <div>
-                  <p className="font-semibold">{profile?.full_name || 'Seller'}</p>
-                  <Badge variant="outline" className="text-xs">Seller</Badge>
+                <p className="font-semibold">{profile?.full_name || t('seller')}</p>
+                  <Badge variant="outline" className="text-xs">{t('seller')}</Badge>
                 </div>
               </div>
               
@@ -471,7 +471,7 @@ const SellerDashboard: React.FC = () => {
                   }`}
                 >
                   <LayoutDashboard className="w-5 h-5" />
-                  Overview
+                  {t('overview')}
                 </button>
                 <button
                   onClick={() => setActiveTab('products')}
@@ -480,7 +480,7 @@ const SellerDashboard: React.FC = () => {
                   }`}
                 >
                   <Package className="w-5 h-5" />
-                  My Products
+                  {t('myProducts')}
                 </button>
                 <button
                   onClick={() => setActiveTab('orders')}
@@ -489,7 +489,7 @@ const SellerDashboard: React.FC = () => {
                   }`}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  Orders
+                  {t('orders')}
                 </button>
                 <button
                   onClick={() => setActiveTab('settings')}
@@ -498,14 +498,14 @@ const SellerDashboard: React.FC = () => {
                   }`}
                 >
                   <Key className="w-5 h-5" />
-                  Settings
+                  {t('settings')}
                 </button>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <LogOut className="w-5 h-5" />
-                  Logout
+                  {t('logout')}
                 </button>
               </nav>
             </Card>
@@ -515,7 +515,7 @@ const SellerDashboard: React.FC = () => {
           <div className="flex-1">
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                <h1 className="text-2xl font-bold font-heading">Seller Dashboard</h1>
+                <h1 className="text-2xl font-bold font-heading">{t('sellerDashboard')}</h1>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Card className="p-6">
@@ -524,7 +524,7 @@ const SellerDashboard: React.FC = () => {
                         <Package className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Products</p>
+                        <p className="text-sm text-muted-foreground">{t('totalProducts')}</p>
                         <p className="text-2xl font-bold">{products.length}</p>
                       </div>
                     </div>
@@ -536,7 +536,7 @@ const SellerDashboard: React.FC = () => {
                         <ShoppingCart className="w-6 h-6 text-secondary-foreground" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Orders</p>
+                        <p className="text-sm text-muted-foreground">{t('totalOrders')}</p>
                         <p className="text-2xl font-bold">{orderItems.length}</p>
                       </div>
                     </div>
@@ -548,7 +548,7 @@ const SellerDashboard: React.FC = () => {
                         <TrendingUp className="w-6 h-6 text-accent" />
                       </div>
                       <div>
-                        <p className="text-sm text-muted-foreground">Total Revenue</p>
+                        <p className="text-sm text-muted-foreground">{t('totalRevenue')}</p>
                         <p className="text-2xl font-bold">₹{totalRevenue.toFixed(0)}</p>
                       </div>
                     </div>
@@ -558,22 +558,22 @@ const SellerDashboard: React.FC = () => {
                 {pendingApproval > 0 && (
                   <Card className="p-4 border-secondary bg-secondary/10">
                     <p className="text-sm">
-                      ⚠️ You have <strong>{pendingApproval}</strong> products pending admin approval.
+                      ⚠️ {t('youHave')} <strong>{pendingApproval}</strong> {t('pendingAdminApproval')}.
                     </p>
                   </Card>
                 )}
 
                 <Card className="p-6">
-                  <h3 className="font-semibold mb-4">Recent Orders</h3>
+                  <h3 className="font-semibold mb-4">{t('recentOrders')}</h3>
                   {orderItems.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">No orders yet</p>
+                    <p className="text-muted-foreground text-center py-8">{t('noOrders')}</p>
                   ) : (
                     <div className="space-y-3">
                       {orderItems.slice(0, 5).map((item) => (
                         <div key={item.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                           <div>
                             <p className="font-medium">{item.product_name}</p>
-                            <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                            <p className="text-sm text-muted-foreground">{t('qty')}: {item.quantity}</p>
                           </div>
                           <p className="font-semibold">₹{item.price * item.quantity}</p>
                         </div>
@@ -587,7 +587,7 @@ const SellerDashboard: React.FC = () => {
             {activeTab === 'products' && (
               <div className="space-y-6">
                 <div className="flex justify-between items-center">
-                  <h1 className="text-2xl font-bold font-heading">My Products</h1>
+                  <h1 className="text-2xl font-bold font-heading">{t('myProducts')}</h1>
                   <Dialog open={isAddModalOpen} onOpenChange={(open) => {
                     setIsAddModalOpen(open);
                     if (!open) {
@@ -598,16 +598,16 @@ const SellerDashboard: React.FC = () => {
                     <DialogTrigger asChild>
                       <Button>
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Product
+                        {t('addProduct')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+                        <DialogTitle>{editingProduct ? t('editProduct') : t('addNewProduct')}</DialogTitle>
                       </DialogHeader>
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                          <label className="text-sm font-medium">Product Name *</label>
+                          <label className="text-sm font-medium">{t('productName')} *</label>
                           <Input
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -615,7 +615,7 @@ const SellerDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Description</label>
+                          <label className="text-sm font-medium">{t('description')}</label>
                           <Textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -624,7 +624,7 @@ const SellerDashboard: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium">Price (₹) *</label>
+                            <label className="text-sm font-medium">{t('price')} (₹) *</label>
                             <Input
                               type="number"
                               step="0.01"
@@ -634,7 +634,7 @@ const SellerDashboard: React.FC = () => {
                             />
                           </div>
                           <div>
-                            <label className="text-sm font-medium">Original Price (₹)</label>
+                            <label className="text-sm font-medium">{t('originalPrice')} (₹)</label>
                             <Input
                               type="number"
                               step="0.01"
@@ -645,7 +645,7 @@ const SellerDashboard: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="text-sm font-medium">Category *</label>
+                            <label className="text-sm font-medium">{t('category')} *</label>
                             <Select
                               value={formData.category}
                               onValueChange={(value) => setFormData({ ...formData, category: value })}
@@ -654,17 +654,17 @@ const SellerDashboard: React.FC = () => {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="seeds">Seeds</SelectItem>
-                                <SelectItem value="fertilizers">Fertilizers</SelectItem>
-                                <SelectItem value="pesticides">Pesticides</SelectItem>
-                                <SelectItem value="tools">Farm Tools</SelectItem>
-                                <SelectItem value="organic">Organic</SelectItem>
-                                <SelectItem value="irrigation">Irrigation</SelectItem>
+                                <SelectItem value="seeds">{t('seeds')}</SelectItem>
+                                <SelectItem value="fertilizers">{t('fertilizers')}</SelectItem>
+                                <SelectItem value="pesticides">{t('pesticides')}</SelectItem>
+                                <SelectItem value="tools">{t('tools')}</SelectItem>
+                                <SelectItem value="organic">{t('organic')}</SelectItem>
+                                <SelectItem value="irrigation">{t('irrigation')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <div>
-                            <label className="text-sm font-medium">Unit</label>
+                            <label className="text-sm font-medium">{t('unit')}</label>
                             <Select
                               value={formData.unit}
                               onValueChange={(value) => setFormData({ ...formData, unit: value })}
@@ -673,18 +673,18 @@ const SellerDashboard: React.FC = () => {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="kg">Per Kg</SelectItem>
-                                <SelectItem value="gram">Per Gram</SelectItem>
-                                <SelectItem value="ml">Per ML</SelectItem>
-                                <SelectItem value="liter">Per Liter</SelectItem>
-                                <SelectItem value="piece">Per Piece</SelectItem>
-                                <SelectItem value="pack">Per Pack</SelectItem>
+                                <SelectItem value="kg">{t('perKgUnit')}</SelectItem>
+                                <SelectItem value="gram">{t('perGram')}</SelectItem>
+                                <SelectItem value="ml">{t('perML')}</SelectItem>
+                                <SelectItem value="liter">{t('perLiter')}</SelectItem>
+                                <SelectItem value="piece">{t('perPiece')}</SelectItem>
+                                <SelectItem value="pack">{t('perPack')}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Stock</label>
+                          <label className="text-sm font-medium">{t('stock')}</label>
                           <Input
                             type="number"
                             value={formData.stock}
@@ -692,7 +692,7 @@ const SellerDashboard: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Product Images (up to 5)</label>
+                          <label className="text-sm font-medium">{t('productImages')}</label>
                           <div className="mt-2 space-y-3">
                             {/* Gallery preview */}
                             {(existingImages.length > 0 || imagePreviews.length > 0) && (
@@ -739,8 +739,8 @@ const SellerDashboard: React.FC = () => {
                                 className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 text-center cursor-pointer hover:border-primary/50 transition-colors"
                               >
                                 <Upload className="w-6 h-6 mx-auto text-muted-foreground mb-1" />
-                                <p className="text-sm text-muted-foreground">Add images</p>
-                                <p className="text-xs text-muted-foreground">Max 5MB each</p>
+                                <p className="text-sm text-muted-foreground">{t('addImages')}</p>
+                                <p className="text-xs text-muted-foreground">{t('maxFileSize')}</p>
                               </div>
                             )}
                             <input
@@ -759,10 +759,10 @@ const SellerDashboard: React.FC = () => {
                             checked={formData.is_organic}
                             onCheckedChange={(checked) => setFormData({ ...formData, is_organic: checked as boolean })}
                           />
-                          <label htmlFor="organic" className="text-sm">Organic Product</label>
+                          <label htmlFor="organic" className="text-sm">{t('organicProduct')}</label>
                         </div>
                         <Button type="submit" className="w-full" disabled={uploading}>
-                          {uploading ? 'Uploading...' : editingProduct ? 'Update Product' : 'Add Product'}
+                          {uploading ? t('uploading') : editingProduct ? t('updateProduct') : t('addProduct')}
                         </Button>
                       </form>
                     </DialogContent>
@@ -770,12 +770,12 @@ const SellerDashboard: React.FC = () => {
                 </div>
 
                 {loading ? (
-                  <div className="text-center py-12">Loading...</div>
+                  <div className="text-center py-12">{t('loading')}</div>
                 ) : products.length === 0 ? (
                   <Card className="p-12 text-center">
                     <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No products yet</h3>
-                    <p className="text-muted-foreground mb-4">Start adding products to sell on KhetiFy</p>
+                    <h3 className="text-lg font-semibold mb-2">{t('noProducts')}</h3>
+                    <p className="text-muted-foreground mb-4">{t('startAddingProducts')}</p>
                   </Card>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -789,12 +789,12 @@ const SellerDashboard: React.FC = () => {
                           )}
                           {!product.is_approved && (
                             <Badge className="absolute top-2 right-2 bg-secondary text-secondary-foreground">
-                              Pending Approval
+                              {t('pendingApproval')}
                             </Badge>
                           )}
                           {product.is_organic && (
                             <Badge className="absolute top-2 left-2 bg-accent text-accent-foreground">
-                              Organic
+                              {t('organic')}
                             </Badge>
                           )}
                         </div>
@@ -808,7 +808,7 @@ const SellerDashboard: React.FC = () => {
                             )}
                             <span className="text-xs text-muted-foreground">/{product.unit}</span>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">Stock: {product.stock || 0}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{t('stock')}: {product.stock || 0}</p>
                           <div className="flex gap-2 mt-4">
                             <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
                               <Edit className="w-4 h-4" />
@@ -827,13 +827,13 @@ const SellerDashboard: React.FC = () => {
 
             {activeTab === 'orders' && (
               <div className="space-y-6">
-                <h1 className="text-2xl font-bold font-heading">Orders</h1>
+                <h1 className="text-2xl font-bold font-heading">{t('orders')}</h1>
                 
                 {orderItems.length === 0 ? (
                   <Card className="p-12 text-center">
                     <ShoppingCart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-                    <p className="text-muted-foreground">Orders for your products will appear here</p>
+                    <h3 className="text-lg font-semibold mb-2">{t('noOrders')}</h3>
+                    <p className="text-muted-foreground">{t('ordersForProducts')}</p>
                   </Card>
                 ) : (
                   <Card>
@@ -843,7 +843,7 @@ const SellerDashboard: React.FC = () => {
                           <div>
                             <p className="font-medium">{item.product_name}</p>
                             <p className="text-sm text-muted-foreground">
-                              Quantity: {item.quantity} • Order ID: {item.order_id.slice(0, 8)}...
+                              {t('quantity')}: {item.quantity} • {t('orderId')}: {item.order_id.slice(0, 8)}...
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(item.created_at).toLocaleDateString()}
@@ -851,7 +851,7 @@ const SellerDashboard: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-primary">₹{item.price * item.quantity}</p>
-                            <p className="text-sm text-muted-foreground">₹{item.price} each</p>
+                            <p className="text-sm text-muted-foreground">₹{item.price} {t('each')}</p>
                           </div>
                         </div>
                       ))}
@@ -863,7 +863,7 @@ const SellerDashboard: React.FC = () => {
 
             {activeTab === 'settings' && (
               <div className="space-y-6">
-                <h1 className="text-2xl font-bold font-heading">Settings</h1>
+                <h1 className="text-2xl font-bold font-heading">{t('settings')}</h1>
                 
                 {/* Shop Image Upload */}
                 <Card className="p-6">
@@ -872,8 +872,8 @@ const SellerDashboard: React.FC = () => {
                       <ImageIcon className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold">Shop Banner Image</p>
-                      <p className="text-sm text-muted-foreground">Upload a banner image for your store page</p>
+                      <p className="font-semibold">{t('shopBannerImage')}</p>
+                      <p className="text-sm text-muted-foreground">{t('uploadBannerForStore')}</p>
                     </div>
                   </div>
                   
@@ -897,8 +897,8 @@ const SellerDashboard: React.FC = () => {
                   ) : (
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors mb-4">
                       <Upload className="w-8 h-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground mt-2">Click to upload shop image</span>
-                      <span className="text-xs text-muted-foreground mt-1">Max 5MB</span>
+                      <span className="text-sm text-muted-foreground mt-2">{t('clickToUpload')}</span>
+                      <span className="text-xs text-muted-foreground mt-1">{t('maxFileSize')}</span>
                       <input
                         ref={shopImageInputRef}
                         type="file"
@@ -918,12 +918,12 @@ const SellerDashboard: React.FC = () => {
                       {shopImageUploading ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Uploading...
+                          {t('uploading')}
                         </>
                       ) : (
                         <>
                           <Upload className="w-4 h-4 mr-2" />
-                          Save Shop Image
+                          {t('saveShopImage')}
                         </>
                       )}
                     </Button>
@@ -937,12 +937,12 @@ const SellerDashboard: React.FC = () => {
                         <Key className="w-6 h-6 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold">Change Password</p>
-                        <p className="text-sm text-muted-foreground">Update your account password</p>
+                        <p className="font-semibold">{t('changePassword')}</p>
+                        <p className="text-sm text-muted-foreground">{t('updateAccountPassword')}</p>
                       </div>
                     </div>
                     <Button onClick={() => setIsPasswordModalOpen(true)}>
-                      Change Password
+                      {t('changePassword')}
                     </Button>
                   </div>
                 </Card>
@@ -954,12 +954,12 @@ const SellerDashboard: React.FC = () => {
                         <LogOut className="w-6 h-6 text-destructive" />
                       </div>
                       <div>
-                        <p className="font-semibold text-destructive">Logout</p>
-                        <p className="text-sm text-muted-foreground">Sign out from your account</p>
+                        <p className="font-semibold text-destructive">{t('logout')}</p>
+                        <p className="text-sm text-muted-foreground">{t('signOutFromAccount')}</p>
                       </div>
                     </div>
                     <Button variant="destructive" onClick={handleLogout}>
-                      Logout
+                      {t('logout')}
                     </Button>
                   </div>
                 </Card>
@@ -973,20 +973,20 @@ const SellerDashboard: React.FC = () => {
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <Card className="w-full max-w-md p-6 animate-scale-in">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Change Password</h2>
+                <h2 className="text-xl font-bold">{t('changePassword')}</h2>
                 <Button variant="ghost" size="icon" onClick={() => setIsPasswordModalOpen(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">New Password</label>
+                  <label className="text-sm font-medium mb-2 block">{t('newPassword')}</label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
+                      placeholder={t('enterNewPassword')}
                     />
                     <Button
                       type="button"
@@ -1000,20 +1000,20 @@ const SellerDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Confirm Password</label>
+                  <label className="text-sm font-medium mb-2 block">{t('confirmPassword')}</label>
                   <Input
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm new password"
+                    placeholder={t('confirmNewPassword')}
                   />
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button variant="outline" className="flex-1" onClick={() => setIsPasswordModalOpen(false)}>
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button className="flex-1" onClick={handleChangePassword} disabled={passwordLoading}>
-                    {passwordLoading ? 'Updating...' : 'Update Password'}
+                    {passwordLoading ? t('updating') : t('updatePassword')}
                   </Button>
                 </div>
               </div>

@@ -7,9 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const SellerDashboard: React.FC = () => {
   const { profile, user } = useAuth();
+  const { t } = useLanguage();
   const [stats, setStats] = useState({ products: 0, pendingOrders: 0 });
 
   useEffect(() => {
@@ -45,10 +47,10 @@ const SellerDashboard: React.FC = () => {
   };
 
   const quickActions = [
-    { icon: Package, label: 'My Products', path: '/seller', color: 'from-emerald-500 to-green-600', stat: stats.products },
-    { icon: TrendingUp, label: 'Orders', path: '/seller', color: 'from-blue-500 to-indigo-600', stat: stats.pendingOrders },
-    { icon: Store, label: 'My Store', path: `/store/${user?.id}`, color: 'from-purple-500 to-pink-500' },
-    { icon: Sprout, label: 'Farmer Corner', path: '/farmer-corner', color: 'from-lime-500 to-green-500' },
+    { icon: Package, label: t('myProducts'), path: '/seller', color: 'from-emerald-500 to-green-600', stat: stats.products },
+    { icon: TrendingUp, label: t('orders'), path: '/seller', color: 'from-blue-500 to-indigo-600', stat: stats.pendingOrders },
+    { icon: Store, label: t('viewStore'), path: `/store/${user?.id}`, color: 'from-purple-500 to-pink-500' },
+    { icon: Sprout, label: t('farmerCorner'), path: '/farmer-corner', color: 'from-lime-500 to-green-500' },
   ];
 
   return (
@@ -67,19 +69,19 @@ const SellerDashboard: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-xl sm:text-2xl font-heading">
-                      Hello, {profile?.full_name?.split(' ')[0] || 'Seller'}! 🌾
+                      {t('goodMorning')}, {profile?.full_name?.split(' ')[0] || t('seller')}! 🌾
                     </CardTitle>
-                    <Badge variant="default" className="bg-emerald-600">Seller</Badge>
+                    <Badge variant="default" className="bg-emerald-600">{t('seller')}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Manage your farm products and orders
+                    {t('manageListings')}
                   </p>
                 </div>
               </div>
               <Link to="/seller">
                 <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="w-4 h-4" />
-                  Add Product
+                  {t('addProduct')}
                 </Button>
               </Link>
             </div>
