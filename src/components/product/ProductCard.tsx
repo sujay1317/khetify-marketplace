@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Star, Leaf, GitCompare, Check, Truck } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -13,7 +13,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = memo(({ product }) => {
   const { addToCart } = useCart();
   const { language, t } = useLanguage();
   const { addToCompare, removeFromCompare, isInCompare, maxProducts, compareList } = useCompare();
@@ -21,7 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   const inCompare = isInCompare(product.id);
 
-  const getLocalizedName = () => {
+  const getLocalizedName = useMemo(() => {
     switch (language) {
       case 'hi':
         return product.nameHi;
@@ -30,9 +30,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       default:
         return product.name;
     }
-  };
+  }, [language, product.nameHi, product.nameMr, product.name]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
@@ -43,9 +43,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         onClick: () => navigate('/cart'),
       },
     });
-  };
+  }, [addToCart, product, navigate]);
 
-  const handleCompareToggle = (e: React.MouseEvent) => {
+  const handleCompareToggle = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -70,11 +70,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       });
       toast.success(`${product.name} added to compare`);
     }
-  };
+  }, [inCompare, removeFromCompare, product, compareList.length, maxProducts, addToCompare]);
 
-  const discountPercent = product.originalPrice
+  const discountPercent = useMemo(() => product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
-    : 0;
+    : 0, [product.originalPrice, product.price]);
 
   return (
     <Link to={`/product/${product.id}`}>
@@ -138,7 +138,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {/* Title */}
           <h3 className="font-semibold text-sm sm:text-base text-foreground line-clamp-2 mb-1.5 sm:mb-2 group-hover:text-primary transition-colors leading-tight">
-            {getLocalizedName()}
+            {getLocalizedName}
           </h3>
 
           {/* Rating */}
@@ -194,6 +194,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </Card>
     </Link>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;

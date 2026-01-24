@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone } from 'lucide-react';
 import khetifyLogo from '@/assets/khetify-logo-cart.png';
 
-const Footer = () => {
+const Footer = memo(() => {
   const { t } = useLanguage();
 
   return (
@@ -136,6 +136,8 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
+
+Footer.displayName = 'Footer';
 
 export default Footer;

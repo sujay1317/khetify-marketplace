@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout, MessageSquare, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import khetifyLogo from '@/assets/khetify-logo.png';
 
-const MobileBottomNav: React.FC = () => {
+const MobileBottomNav: React.FC = memo(() => {
   const location = useLocation();
   const { totalItems } = useCart();
   const { user, role } = useAuth();
@@ -95,6 +95,8 @@ const MobileBottomNav: React.FC = () => {
       </div>
     </nav>
   );
-};
+});
+
+MobileBottomNav.displayName = 'MobileBottomNav';
 
 export default MobileBottomNav;
