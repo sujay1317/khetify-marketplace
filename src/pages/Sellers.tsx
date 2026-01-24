@@ -160,20 +160,25 @@ const Sellers: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {filteredSellers.map((seller) => (
               <Link key={seller.user_id} to={`/store/${seller.user_id}`}>
-                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden">
+                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden group">
                   {/* Shop Image Banner */}
-                  {seller.shop_image && (
-                    <div className="w-full h-24 overflow-hidden">
+                  <div className="w-full h-24 overflow-hidden bg-gradient-to-br from-primary/20 via-accent/10 to-secondary/20">
+                    {seller.shop_image ? (
                       <img 
                         src={seller.shop_image} 
                         alt={`${seller.full_name}'s shop`}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Store className="w-8 h-8 text-primary/40" />
+                      </div>
+                    )}
+                  </div>
                   
-                  <CardContent className={`p-4 flex flex-col items-center text-center ${seller.shop_image ? 'pt-2' : ''}`}>
-                    <Avatar className={`w-16 h-16 mb-3 ring-2 ring-primary/20 ${seller.shop_image ? '-mt-10 border-4 border-background' : ''}`}>
+                  <CardContent className="p-4 flex flex-col items-center text-center pt-2">
+                    <Avatar className="w-16 h-16 mb-3 ring-2 ring-primary/20 -mt-10 border-4 border-background shadow-md">
                       <AvatarImage src={seller.avatar_url || undefined} alt={seller.full_name || 'Seller'} />
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {getInitials(seller.full_name)}
@@ -190,7 +195,7 @@ const Sellers: React.FC = () => {
                         {t('seller')}
                       </Badge>
                       {seller.free_delivery && (
-                        <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                        <Badge variant="outline" className="text-xs text-accent border-accent/50">
                           <Truck className="w-3 h-3 mr-1" />
                           {t('freeDelivery')}
                         </Badge>
@@ -204,7 +209,7 @@ const Sellers: React.FC = () => {
                       </span>
                       {seller.avg_rating > 0 && (
                         <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <Star className="w-3 h-3 fill-secondary text-secondary" />
                           {seller.avg_rating.toFixed(1)}
                         </span>
                       )}
