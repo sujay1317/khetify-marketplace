@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart, Product } from '@/contexts/CartContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -17,6 +18,7 @@ interface WishlistProduct extends Product {
 const Wishlist: React.FC = () => {
   const { user } = useAuth();
   const { addToCart } = useCart();
+  const { t } = useLanguage();
   const [products, setProducts] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +68,7 @@ const Wishlist: React.FC = () => {
 
     const sellerMap: Record<string, string> = {};
     profilesData?.forEach(p => {
-      sellerMap[p.user_id] = p.full_name || 'Unknown Seller';
+      sellerMap[p.user_id] = p.full_name || t('unknownSeller');
     });
 
     // Transform products
@@ -85,7 +87,7 @@ const Wishlist: React.FC = () => {
         stock: p.stock || 0,
         unit: p.unit || 'kg',
         sellerId: p.seller_id,
-        sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
+        sellerName: sellerMap[p.seller_id] || t('unknownSeller'),
         rating: 4.5,
         reviews: 0,
         isOrganic: p.is_organic || false,
@@ -123,10 +125,10 @@ const Wishlist: React.FC = () => {
         <Header />
         <main className="container mx-auto px-4 py-16 text-center">
           <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Login to view your wishlist</h1>
-          <p className="text-muted-foreground mb-4">Save your favorite products for later</p>
+          <h1 className="text-2xl font-bold mb-2">{t('login')} {t('wishlist')}</h1>
+          <p className="text-muted-foreground mb-4">{t('addToWishlist')}</p>
           <Link to="/login">
-            <Button>Login</Button>
+            <Button>{t('login')}</Button>
           </Link>
         </main>
         <Footer />
@@ -140,7 +142,7 @@ const Wishlist: React.FC = () => {
         <Header />
         <main className="container mx-auto px-4 py-16 text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading wishlist...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </main>
         <Footer />
       </div>
@@ -153,18 +155,18 @@ const Wishlist: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold font-heading mb-6">
           <Heart className="inline-block w-8 h-8 mr-2 text-destructive" />
-          My Wishlist
+          {t('myWishlist')}
         </h1>
 
         {products.length === 0 ? (
           <div className="text-center py-16">
             <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Your wishlist is empty</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('emptyWishlist')}</h2>
             <p className="text-muted-foreground mb-4">
-              Start adding products you love!
+              {t('addToWishlist')}
             </p>
             <Link to="/products">
-              <Button>Browse Products</Button>
+              <Button>{t('products')}</Button>
             </Link>
           </div>
         ) : (
@@ -203,7 +205,7 @@ const Wishlist: React.FC = () => {
                       disabled={product.stock === 0}
                     >
                       <ShoppingCart className="w-4 h-4 mr-1" />
-                      Add to Cart
+                      {t('addToCart')}
                     </Button>
                     <Button
                       size="sm"

@@ -288,7 +288,7 @@ const Products: React.FC = () => {
             {t('products')}
           </h1>
           <p className="text-muted-foreground">
-            {filteredProducts.length} products available from various sellers
+            {filteredProducts.length} {t('products')}
           </p>
         </div>
 
@@ -299,7 +299,7 @@ const Products: React.FC = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder={`${t('search')} products or sellers...`}
+              placeholder={t('searchProductsOrSellers')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -313,11 +313,11 @@ const Products: React.FC = () => {
               <SelectValue placeholder={t('sortBy')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="featured">Featured</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-              <SelectItem value="rating">Top Rated</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="featured">{t('sortFeatured')}</SelectItem>
+              <SelectItem value="price-low">{t('sortPriceLowHigh')}</SelectItem>
+              <SelectItem value="price-high">{t('sortPriceHighLow')}</SelectItem>
+              <SelectItem value="rating">{t('sortRating')}</SelectItem>
+              <SelectItem value="newest">{t('sortNewest')}</SelectItem>
             </SelectContent>
           </Select>
 

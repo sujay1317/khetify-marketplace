@@ -217,10 +217,10 @@ const CustomerProfile: React.FC = () => {
         <Header />
         <main className="container mx-auto px-4 py-12 text-center">
           <User className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-bold mb-2">Please Login</h1>
-          <p className="text-muted-foreground mb-6">Login to view your profile</p>
+          <h1 className="text-2xl font-bold mb-2">{t('login')}</h1>
+          <p className="text-muted-foreground mb-6">{t('login')} {t('profile')}</p>
           <Link to="/login">
-            <Button>Login</Button>
+            <Button>{t('login')}</Button>
           </Link>
         </main>
       </div>
@@ -261,71 +261,69 @@ const CustomerProfile: React.FC = () => {
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
                   <Edit2 className="w-4 h-4 mr-2" />
-                  Edit Profile
+                  {t('edit')} {t('profile')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleLogout} className="text-destructive hover:text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  {t('logout')}
                 </Button>
               </div>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-border/50">
               <div className="text-center">
                 <p className="text-2xl font-bold text-primary">{stats.total}</p>
-                <p className="text-sm text-muted-foreground">Total Orders</p>
+                <p className="text-sm text-muted-foreground">{t('totalOrders')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-secondary">{stats.pending}</p>
-                <p className="text-sm text-muted-foreground">Pending</p>
+                <p className="text-sm text-muted-foreground">{t('pending')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-accent">{stats.delivered}</p>
-                <p className="text-sm text-muted-foreground">Delivered</p>
+                <p className="text-sm text-muted-foreground">{t('delivered')}</p>
               </div>
               <div className="text-center">
                 <p className="text-2xl font-bold text-primary">₹{stats.totalSpent}</p>
-                <p className="text-sm text-muted-foreground">Total Spent</p>
+                <p className="text-sm text-muted-foreground">{t('total')}</p>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Edit Profile Modal */}
         {isEditing && (
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <Card className="w-full max-w-md p-6 animate-scale-in">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">Edit Profile</h2>
+                <h2 className="text-xl font-bold">{t('edit')} {t('profile')}</h2>
                 <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
                   <X className="w-4 h-4" />
                 </Button>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Full Name</label>
+                  <label className="text-sm font-medium mb-2 block">{t('fullName')}</label>
                   <Input
                     value={editForm.full_name}
                     onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                    placeholder="Enter your full name"
+                    placeholder={t('enterName')}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Phone</label>
+                  <label className="text-sm font-medium mb-2 block">{t('phone')}</label>
                   <Input
                     value={editForm.phone}
                     onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                    placeholder="Enter your phone number"
+                    placeholder={t('enterPhone')}
                   />
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>
-                    Cancel
+                    {t('cancel')}
                   </Button>
                   <Button className="flex-1" onClick={handleUpdateProfile}>
                     <Save className="w-4 h-4 mr-2" />
-                    Save Changes
+                    {t('save')}
                   </Button>
                 </div>
               </div>
@@ -333,38 +331,37 @@ const CustomerProfile: React.FC = () => {
           </div>
         )}
 
-        {/* Tabs */}
         <Tabs defaultValue="orders" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
             <TabsTrigger value="orders" className="gap-2">
               <Package className="w-4 h-4" />
-              Order History
+              {t('orders')}
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="w-4 h-4" />
-              Settings
+              {t('settings')}
             </TabsTrigger>
           </TabsList>
 
           {/* Orders Tab */}
           <TabsContent value="orders" className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Recent Orders</h2>
+              <h2 className="text-lg font-semibold">{t('recentOrders')}</h2>
               <Link to="/orders">
                 <Button variant="ghost" size="sm">
-                  View All
+                  {t('viewAll')}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
             </div>
 
             {loading ? (
-              <div className="text-center py-12">Loading...</div>
+              <div className="text-center py-12">{t('loading')}</div>
             ) : orders.length === 0 ? (
               <Card className="p-12 text-center">
                 <ShoppingBag className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No orders yet</h3>
-                <p className="text-muted-foreground mb-6">Start shopping to see your orders here</p>
+                <h3 className="text-lg font-semibold mb-2">{t('noOrders')}</h3>
+                <p className="text-muted-foreground mb-6">{t('continueShopping')}</p>
                 <Link to="/products">
                   <Button>{t('shopNow')}</Button>
                 </Link>
@@ -377,7 +374,7 @@ const CustomerProfile: React.FC = () => {
                       <div className="flex items-center gap-3">
                         {getStatusIcon(order.status)}
                         <div>
-                          <p className="font-medium">Order #{order.id.slice(0, 8)}</p>
+                          <p className="font-medium">{t('orderNumber')}{order.id.slice(0, 8)}</p>
                           <p className="text-sm text-muted-foreground">
                             {new Date(order.created_at).toLocaleDateString('en-IN', {
                               year: 'numeric',
@@ -389,7 +386,7 @@ const CustomerProfile: React.FC = () => {
                       </div>
                       <div className="flex items-center gap-3">
                         <Badge className={getStatusColor(order.status)}>
-                          {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || 'Pending'}
+                          {order.status ? t(order.status) : t('pending')}
                         </Badge>
                         <span className="font-bold">₹{order.total}</span>
                       </div>

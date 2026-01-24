@@ -60,7 +60,7 @@ const Cart: React.FC = () => {
             </div>
             <h1 className="text-2xl font-bold mb-2">{t('emptyCart')}</h1>
             <p className="text-muted-foreground mb-6">
-              Looks like you haven't added anything to your cart yet.
+              {t('continueShopping')}
             </p>
             <Link to="/products">
               <Button variant="hero" size="lg">
@@ -80,7 +80,7 @@ const Cart: React.FC = () => {
 
       <main className="container mx-auto px-4 py-6 md:py-8">
         <h1 className="text-2xl md:text-3xl font-bold font-heading mb-6">
-          {t('yourCart')} ({totalItems} items)
+          {t('yourCart')} ({totalItems} {t('items')})
         </h1>
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
@@ -193,22 +193,22 @@ const Cart: React.FC = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-24">
-              <h2 className="text-lg font-bold mb-4">Order Summary</h2>
+              <h2 className="text-lg font-bold mb-4">{t('orderDetails')}</h2>
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Subtotal ({totalItems} items)</span>
+                  <span className="text-muted-foreground">{t('subtotal')} ({totalItems} {t('items')})</span>
                   <span className="font-medium">₹{totalPrice}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Delivery ({totalProductCount} items)</span>
+                  <span className="text-muted-foreground">{t('delivery')} ({totalProductCount} {t('items')})</span>
                   <span className={`font-medium ${allFreeDelivery ? 'text-green-600' : ''}`}>
-                    {allFreeDelivery ? 'FREE' : `₹${deliveryFee}`}
+                    {allFreeDelivery ? t('freeDelivery') : `₹${deliveryFee}`}
                   </span>
                 </div>
                 {allFreeDelivery ? (
                   <p className="text-xs text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded-lg">
-                    🎉 Free delivery on all items!
+                    🎉 {t('freeDelivery')}!
                   </p>
                 ) : (
                   <p className="text-xs text-muted-foreground bg-muted p-2 rounded-lg">
