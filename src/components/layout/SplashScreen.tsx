@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import khetifyLogo from '@/assets/khetify-logo-new.png';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SplashScreenProps {
   onComplete: () => void;
@@ -11,6 +12,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
   minDisplayTime = 1500 
 }) => {
   const [isExiting, setIsExiting] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -71,7 +73,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({
       <p className={`absolute bottom-8 text-xs text-muted-foreground transition-all duration-500 ${
         isExiting ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
       }`}>
-        Connecting sellers with farmers across India
+        {t('connectingFarmers')}
       </p>
     </div>
   );

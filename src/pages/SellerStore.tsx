@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/contexts/CartContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SellerProfile {
   user_id: string;
@@ -22,6 +23,7 @@ interface SellerProfile {
 
 const SellerStore: React.FC = () => {
   const { sellerId } = useParams<{ sellerId: string }>();
+  const { t } = useLanguage();
   const [seller, setSeller] = useState<SellerProfile | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +114,7 @@ const SellerStore: React.FC = () => {
       stock: p.stock || 0,
       unit: p.unit || 'kg',
       sellerId: p.seller_id,
-      sellerName: profileData.full_name || 'Unknown Seller',
+      sellerName: profileData.full_name || t('unknownSeller'),
       rating: ratingsMap[p.id]?.avg || 0,
       reviews: ratingsMap[p.id]?.count || 0,
       isOrganic: p.is_organic || false,
@@ -135,7 +137,7 @@ const SellerStore: React.FC = () => {
         <Header />
         <main className="container mx-auto px-4 py-16 text-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading seller store...</p>
+          <p className="text-muted-foreground">{t('loading')}</p>
         </main>
         <Footer />
       </div>
@@ -148,10 +150,10 @@ const SellerStore: React.FC = () => {
         <Header />
         <main className="container mx-auto px-4 py-16 text-center">
           <Store className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h1 className="text-2xl font-bold mb-2">Seller not found</h1>
-          <p className="text-muted-foreground mb-6">The seller you're looking for doesn't exist or has been removed.</p>
+          <h1 className="text-2xl font-bold mb-2">{t('sellerNotFound')}</h1>
+          <p className="text-muted-foreground mb-6">{t('noResultsFound')}</p>
           <Link to="/products" className="text-primary hover:underline">
-            Browse all products →
+            {t('viewAll')} {t('products')} →
           </Link>
         </main>
         <Footer />
@@ -175,7 +177,7 @@ const SellerStore: React.FC = () => {
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Products
+          {t('back')} {t('products')}
         </Link>
 
         {/* Shop Image Banner */}
@@ -203,12 +205,12 @@ const SellerStore: React.FC = () => {
               <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
                 <Store className="w-5 h-5 text-primary" />
                 <h1 className="text-2xl md:text-3xl font-bold font-heading">
-                  {seller.full_name || 'Unknown Seller'}
+                  {seller.full_name || t('unknownSeller')}
                 </h1>
               </div>
               
               <p className="text-muted-foreground mb-2">
-                Seller since {new Date(seller.created_at).toLocaleDateString('en-IN', { 
+                {t('sellerSince')} {new Date(seller.created_at).toLocaleDateString('en-IN', { 
                   year: 'numeric', 
                   month: 'long' 
                 })}
@@ -218,7 +220,7 @@ const SellerStore: React.FC = () => {
               {seller.free_delivery && (
                 <Badge variant="success" className="mb-4 gap-1">
                   <Truck className="w-3.5 h-3.5" />
-                  Free Delivery on all products
+                  {t('freeDelivery')}
                 </Badge>
               )}
 
@@ -227,12 +229,12 @@ const SellerStore: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Package className="w-5 h-5 text-primary" />
                   <span className="font-semibold">{stats.totalProducts}</span>
-                  <span className="text-muted-foreground">Products</span>
+                  <span className="text-muted-foreground">{t('products')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 fill-secondary text-secondary" />
                   <span className="font-semibold">{stats.avgRating.toFixed(1)}</span>
-                  <span className="text-muted-foreground">({stats.totalReviews} reviews)</span>
+                  <span className="text-muted-foreground">({stats.totalReviews} {t('reviews')})</span>
                 </div>
               </div>
             </div>
@@ -242,7 +244,7 @@ const SellerStore: React.FC = () => {
         {/* Products Grid */}
         <section>
           <h2 className="text-xl md:text-2xl font-bold font-heading mb-6">
-            Products by {seller.full_name || 'this seller'}
+            {t('products')} - {seller.full_name || t('seller')}
           </h2>
 
           {products.length > 0 ? (
@@ -254,9 +256,9 @@ const SellerStore: React.FC = () => {
           ) : (
             <Card className="p-12 text-center">
               <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-semibold mb-2">No products available</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('noProducts')}</h3>
               <p className="text-muted-foreground">
-                This seller hasn't listed any products yet.
+                {t('noProductsFound')}
               </p>
             </Card>
           )}

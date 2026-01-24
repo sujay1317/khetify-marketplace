@@ -23,7 +23,7 @@ const CategoriesSection: React.FC = memo(() => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold font-heading">{t('categories')}</h2>
-            <p className="text-muted-foreground text-sm mt-1">Browse by category</p>
+            <p className="text-muted-foreground text-sm mt-1">{t('browseByCategory')}</p>
           </div>
           <Link to="/categories">
             <Button variant="ghost" size="sm" className="gap-2 group">
