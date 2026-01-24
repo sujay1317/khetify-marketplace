@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import khetifyLogo from '@/assets/khetify-logo-cart.png';
 import { ShoppingCart, Menu, Search, User, Globe, Heart, LayoutDashboard, Package, LogOut, Sprout } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const Header = () => {
+const Header = memo(() => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { totalItems } = useCart();
@@ -255,6 +255,8 @@ const Header = () => {
       </div>
     </header>
   );
-};
+});
+
+Header.displayName = 'Header';
 
 export default Header;

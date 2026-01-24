@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, ShoppingBag, MessageSquare, ClipboardList, Heart, LayoutDashboard, Sprout, User, LogOut, Globe, X } from 'lucide-react';
 import khetifyLogo from '@/assets/khetify-logo-cart.png';
@@ -14,7 +14,7 @@ interface AppSidebarProps {
   children: React.ReactNode;
 }
 
-const AppSidebar: React.FC<AppSidebarProps> = ({ children }) => {
+const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
   const [open, setOpen] = React.useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { user, role, signOut, profile } = useAuth();
@@ -22,8 +22,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ children }) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  // Navigation items based on role
-  const getNavItems = () => {
+  // Navigation items based on role - memoized
+  const navItems = useMemo(() => {
     const baseItems = [
       { path: '/', label: t('home'), icon: Home },
       { path: '/products', label: t('products'), icon: ShoppingBag },
@@ -55,9 +55,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ children }) => {
       { path: '/orders', label: t('orders'), icon: ClipboardList },
       { path: '/wishlist', label: 'Wishlist', icon: Heart },
     ];
-  };
-
-  const navItems = getNavItems();
+  }, [user, role, t]);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -183,6 +181,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ children }) => {
       </SheetContent>
     </Sheet>
   );
-};
+});
+
+AppSidebar.displayName = 'AppSidebar';
 
 export default AppSidebar;
