@@ -13,7 +13,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-const ProductCard: React.FC<ProductCardProps> = memo(({ product }) => {
+const ProductCard = memo<ProductCardProps>(({ product }) => {
   const { addToCart } = useCart();
   const { language, t } = useLanguage();
   const { addToCompare, removeFromCompare, isInCompare, maxProducts, compareList } = useCompare();
