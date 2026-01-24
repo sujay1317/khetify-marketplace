@@ -10,6 +10,8 @@ interface Profile {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  shop_image: string | null;
+  free_delivery: boolean | null;
 }
 
 interface AuthContextType {

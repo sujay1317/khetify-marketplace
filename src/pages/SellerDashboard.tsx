@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, ShoppingCart, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, LayoutDashboard, Upload, X, Key, EyeIcon, EyeOff } from 'lucide-react';
+import { Package, ShoppingCart, TrendingUp, Plus, Edit, Trash2, Eye, LogOut, LayoutDashboard, Upload, X, Key, EyeIcon, EyeOff, ImageIcon, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -71,6 +71,10 @@ const SellerDashboard: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const shopImageInputRef = useRef<HTMLInputElement>(null);
+  const [shopImage, setShopImage] = useState<File | null>(null);
+  const [shopImagePreview, setShopImagePreview] = useState<string | null>(profile?.shop_image || null);
+  const [shopImageUploading, setShopImageUploading] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -374,6 +378,68 @@ const SellerDashboard: React.FC = () => {
     }
     
     setPasswordLoading(false);
+  };
+
+  const handleShopImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+    
+    setShopImage(file);
+    setShopImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleShopImageUpload = async () => {
+    if (!shopImage || !user) return;
+    
+    setShopImageUploading(true);
+    
+    try {
+      const fileExt = shopImage.name.split('.').pop();
+      const fileName = `${user.id}/shop-image.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('shop-images')
+        .upload(fileName, shopImage, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('shop-images')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ shop_image: publicUrlData.publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      toast.success('Shop image updated successfully!');
+      setShopImage(null);
+      setShopImagePreview(publicUrlData.publicUrl);
+    } catch (error: any) {
+      console.error('Error uploading shop image:', error);
+      toast.error('Failed to upload shop image');
+    } finally {
+      setShopImageUploading(false);
+    }
+  };
+
+  const clearShopImage = () => {
+    setShopImage(null);
+    setShopImagePreview(profile?.shop_image || null);
+    if (shopImageInputRef.current) {
+      shopImageInputRef.current.value = '';
+    }
   };
 
   const totalRevenue = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -799,6 +865,71 @@ const SellerDashboard: React.FC = () => {
               <div className="space-y-6">
                 <h1 className="text-2xl font-bold font-heading">Settings</h1>
                 
+                {/* Shop Image Upload */}
+                <Card className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <ImageIcon className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">Shop Banner Image</p>
+                      <p className="text-sm text-muted-foreground">Upload a banner image for your store page</p>
+                    </div>
+                  </div>
+                  
+                  {shopImagePreview ? (
+                    <div className="relative mb-4">
+                      <img 
+                        src={shopImagePreview} 
+                        alt="Shop preview" 
+                        className="w-full h-40 md:h-48 object-cover rounded-lg border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2"
+                        onClick={clearShopImage}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors mb-4">
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground mt-2">Click to upload shop image</span>
+                      <span className="text-xs text-muted-foreground mt-1">Max 5MB</span>
+                      <input
+                        ref={shopImageInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleShopImageChange}
+                      />
+                    </label>
+                  )}
+                  
+                  {shopImage && (
+                    <Button 
+                      onClick={handleShopImageUpload} 
+                      disabled={shopImageUploading}
+                      className="w-full"
+                    >
+                      {shopImageUploading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Save Shop Image
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </Card>
+
                 <Card className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
