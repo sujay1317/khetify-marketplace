@@ -100,27 +100,18 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
+    // Use service role client for all operations (notifications are internal)
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Authentication check - verify the user is authenticated
+    // Try to get authenticated user (optional - guest orders are allowed)
+    let authenticatedUserId: string | null = null;
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      console.error("No authorization header provided");
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - No authorization header" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      console.error("Invalid token or user not found:", authError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user) {
+        authenticatedUserId = user.id;
+      }
     }
 
     // Parse and validate request body
@@ -145,7 +136,7 @@ serve(async (req) => {
 
     const { orderId, customerName, total, items } = validation.data;
 
-    // Validate the order exists and belongs to the authenticated user
+    // Validate the order exists in the database
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .select("customer_id, total")
@@ -160,7 +151,8 @@ serve(async (req) => {
       );
     }
 
-    if (order.customer_id !== user.id) {
+    // If user is authenticated, verify they own the order
+    if (authenticatedUserId && order.customer_id !== authenticatedUserId) {
       console.error("User is not the owner of this order");
       return new Response(
         JSON.stringify({ error: "Unauthorized - You don't own this order" }),
@@ -171,7 +163,7 @@ serve(async (req) => {
     // Use the actual order total from database for notification (not client-provided)
     const verifiedTotal = order.total;
 
-    console.log("Creating notifications for order:", orderId, "by user:", user.id);
+    console.log("Creating notifications for order:", orderId, "customer:", order.customer_id);
 
     // Get unique seller IDs from order items in database (not from client input)
     const { data: orderItems } = await supabase
