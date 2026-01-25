@@ -1,0 +1,17 @@
+# ============================================================
+# SUPABASE EDGE FUNCTIONS CONFIGURATION
+# ============================================================
+
+project_id = "rnnipawqtzbhtgrlajmc"
+
+[functions.create-seller]
+verify_jwt = true
+
+[functions.delete-user]
+verify_jwt = true
+
+[functions.update-user-password]
+verify_jwt = true
+
+[functions.create-order-notifications]
+verify_jwt = false
