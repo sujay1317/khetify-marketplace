@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,8 +28,10 @@ interface Notification {
 const NotificationBell: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
   const { user, role } = useAuth();
   const { playNotification } = useSound();
+  const navigate = useNavigate();
 
   // Only show notification bell for sellers and admins
   const isSellerOrAdmin = role === 'seller' || role === 'admin';
@@ -78,6 +81,26 @@ const NotificationBell: React.FC = () => {
     };
   }, [user, playNotification, isSellerOrAdmin]);
 
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    await markAsRead(notification.id);
+    
+    // Close the dropdown
+    setIsOpen(false);
+    
+    // Navigate based on notification type
+    if (notification.order_id) {
+      // For sellers/admins, go to manage orders page
+      if (role === 'admin') {
+        navigate('/admin/orders');
+      } else if (role === 'seller') {
+        navigate('/seller/orders');
+      } else {
+        navigate('/orders');
+      }
+    }
+  };
+
   const markAsRead = async (id: string) => {
     await supabase
       .from('notifications')
@@ -116,7 +139,7 @@ const NotificationBell: React.FC = () => {
   if (!user || !isSellerOrAdmin) return null;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />
@@ -132,7 +155,10 @@ const NotificationBell: React.FC = () => {
           <span className="font-semibold">Notifications</span>
           {unreadCount > 0 && (
             <button
-              onClick={markAllAsRead}
+              onClick={(e) => {
+                e.stopPropagation();
+                markAllAsRead();
+              }}
               className="text-xs text-primary hover:underline"
             >
               Mark all read
@@ -148,10 +174,10 @@ const NotificationBell: React.FC = () => {
           notifications.map((notification) => (
             <DropdownMenuItem
               key={notification.id}
-              className={`flex items-start gap-3 p-3 cursor-pointer ${
+              className={`flex items-start gap-3 p-3 cursor-pointer hover:bg-accent ${
                 !notification.is_read ? 'bg-primary/5' : ''
               }`}
-              onClick={() => markAsRead(notification.id)}
+              onClick={() => handleNotificationClick(notification)}
             >
               <span className="text-lg">{getTypeIcon(notification.type)}</span>
               <div className="flex-1 min-w-0">
