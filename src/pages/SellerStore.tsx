@@ -15,8 +15,6 @@ interface SellerProfile {
   user_id: string;
   full_name: string | null;
   avatar_url: string | null;
-  phone: string | null;
-  created_at: string;
   shop_image: string | null;
   free_delivery: boolean | null;
 }
