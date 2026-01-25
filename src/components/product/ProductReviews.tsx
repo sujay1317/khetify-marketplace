@@ -56,17 +56,16 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ productId }) => {
       return;
     }
 
-    // Fetch profiles for reviewers
+    // Fetch profiles for reviewers using secure RPC function
     const userIds = [...new Set(reviewsData.map(r => r.user_id))];
-    const { data: profilesData } = await supabase
-      .from('profiles')
-      .select('user_id, full_name')
-      .in('user_id', userIds);
-
     const profileMap: Record<string, { full_name: string | null }> = {};
-    profilesData?.forEach(p => {
-      profileMap[p.user_id] = { full_name: p.full_name };
-    });
+    
+    for (const userId of userIds) {
+      const { data: userName } = await supabase
+        .rpc('get_public_profile_name', { profile_user_id: userId });
+      
+      profileMap[userId] = { full_name: userName || null };
+    }
 
     const reviewsWithProfiles = reviewsData.map(r => ({
       ...r,
