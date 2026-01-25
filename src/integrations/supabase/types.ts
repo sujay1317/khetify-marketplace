@@ -593,6 +593,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_seller_of_order: { Args: { order_uuid: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "seller" | "customer"
