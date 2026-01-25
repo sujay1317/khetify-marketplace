@@ -57,30 +57,34 @@ const Sellers: React.FC = () => {
 
       const sellerIds = sellerRoles.map(r => r.user_id);
 
-      // Get seller profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, avatar_url, shop_image, free_delivery, created_at')
-        .in('user_id', sellerIds);
-
-      if (profilesError) throw profilesError;
-
-      // Get products with reviews for each seller
+      // Get seller profiles using the secure function
       const sellersWithStats: SellerWithStats[] = [];
 
-      for (const profile of profiles || []) {
+      for (const sellerId of sellerIds) {
+        // Use the security definer function to get seller public info
+        const { data: sellerInfo, error: sellerError } = await supabase
+          .rpc('get_seller_public_info', { seller_user_id: sellerId });
+
+        if (sellerError) {
+          console.error('Error fetching seller info:', sellerError);
+          continue;
+        }
+
+        const profile = sellerInfo?.[0];
+        if (!profile) continue;
+
         // Get product count
         const { count: productCount } = await supabase
           .from('products')
           .select('*', { count: 'exact', head: true })
-          .eq('seller_id', profile.user_id)
+          .eq('seller_id', sellerId)
           .eq('is_approved', true);
 
         // Get average rating from reviews
         const { data: products } = await supabase
           .from('products')
           .select('id')
-          .eq('seller_id', profile.user_id)
+          .eq('seller_id', sellerId)
           .eq('is_approved', true);
 
         let avgRating = 0;
@@ -99,10 +103,10 @@ const Sellers: React.FC = () => {
         sellersWithStats.push({
           user_id: profile.user_id,
           full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
+          avatar_url: null, // Not exposed by secure function
           shop_image: profile.shop_image,
           free_delivery: profile.free_delivery,
-          created_at: profile.created_at,
+          created_at: '',
           product_count: productCount || 0,
           avg_rating: avgRating
         });
