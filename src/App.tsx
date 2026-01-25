@@ -71,8 +71,8 @@ const App = () => {
 
   return (
   <QueryClientProvider client={queryClient}>
-    {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     <LanguageProvider>
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <AuthProvider>
         <CartProvider>
           <CompareProvider>
