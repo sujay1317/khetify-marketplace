@@ -52,6 +52,13 @@ interface OrderItem {
   created_at: string;
 }
 
+interface GroupedOrder {
+  order_id: string;
+  created_at: string;
+  items: OrderItem[];
+  subtotal: number;
+}
+
 const SellerDashboard: React.FC = () => {
   const { user, profile, signOut } = useAuth();
   const { t } = useLanguage();
@@ -838,27 +845,78 @@ const SellerDashboard: React.FC = () => {
                     <p className="text-muted-foreground">{t('ordersForProducts')}</p>
                   </Card>
                 ) : (
-                  <Card>
-                    <div className="divide-y">
-                      {orderItems.map((item) => (
-                        <div key={item.id} className="p-4 flex justify-between items-center">
-                          <div>
-                            <p className="font-medium">{item.product_name}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {t('quantity')}: {item.quantity} • {t('orderId')}: {item.order_id.slice(0, 8)}...
+                  <div className="space-y-4">
+                    {/* Group order items by order_id */}
+                    {Object.values(
+                      orderItems.reduce<Record<string, GroupedOrder>>((acc, item) => {
+                        if (!acc[item.order_id]) {
+                          acc[item.order_id] = {
+                            order_id: item.order_id,
+                            created_at: item.created_at,
+                            items: [],
+                            subtotal: 0,
+                          };
+                        }
+                        acc[item.order_id].items.push(item);
+                        acc[item.order_id].subtotal += item.price * item.quantity;
+                        return acc;
+                      }, {})
+                    )
+                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                      .map((order) => (
+                        <Card key={order.order_id} className="overflow-hidden">
+                          {/* Order Header */}
+                          <div className="bg-muted/50 p-4 border-b">
+                            <div className="flex flex-wrap justify-between items-start gap-2">
+                              <div>
+                                <p className="font-semibold text-sm">
+                                  {t('orderId')}: <span className="font-mono">{order.order_id.slice(0, 8)}...</span>
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(order.created_at).toLocaleDateString('en-IN', {
+                                    weekday: 'short',
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                  })} • {new Date(order.created_at).toLocaleTimeString('en-IN', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+                              <Badge variant="secondary" className="text-sm">
+                                {order.items.length} {order.items.length === 1 ? 'Product' : 'Products'}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Products List */}
+                          <div className="divide-y">
+                            {order.items.map((item) => (
+                              <div key={item.id} className="p-4 flex justify-between items-center">
+                                <div className="flex-1">
+                                  <p className="font-medium">{item.product_name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {t('quantity')}: {item.quantity} × ₹{item.price}
+                                  </p>
+                                </div>
+                                <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Order Subtotal */}
+                          <div className="bg-primary/5 p-4 border-t flex justify-between items-center">
+                            <p className="text-sm font-medium text-muted-foreground">
+                              Product Subtotal (excluding delivery)
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(item.created_at).toLocaleDateString()}
+                            <p className="font-bold text-lg text-primary">
+                              ₹{order.subtotal.toLocaleString('en-IN')}
                             </p>
                           </div>
-                          <div className="text-right">
-                            <p className="font-bold text-primary">₹{item.price * item.quantity}</p>
-                            <p className="text-sm text-muted-foreground">₹{item.price} {t('each')}</p>
-                          </div>
-                        </div>
+                        </Card>
                       ))}
-                    </div>
-                  </Card>
+                  </div>
                 )}
               </div>
             )}
