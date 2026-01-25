@@ -72,7 +72,7 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center gap-4">
                 <Avatar className="w-14 h-14 sm:w-16 sm:h-16 ring-2 ring-purple-500/30">
                   <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-purple-600 text-white text-lg font-semibold">
+                  <AvatarFallback className="bg-pink-600 text-white text-lg font-semibold">
                     {getInitials(profile?.full_name)}
                   </AvatarFallback>
                 </Avatar>
@@ -89,7 +89,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               </div>
               <Link to="/admin">
-                <Button className="gap-2 bg-purple-600 hover:bg-purple-700">
+                <Button className="gap-2 bg-pink-600 hover:bg-pink-700">
                   <Settings className="w-4 h-4" />
                   Admin Panel
                 </Button>
