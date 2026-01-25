@@ -36,21 +36,24 @@ const SellerStore: React.FC = () => {
   const fetchSellerData = async (id: string) => {
     setLoading(true);
 
-    // Fetch seller profile
-    // Use specific field selection to avoid exposing sensitive data like phone numbers
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('user_id, full_name, shop_image, avatar_url, free_delivery')
-      .eq('user_id', id)
-      .maybeSingle();
+    // Use the secure function to get seller public info (respects RLS)
+    const { data: sellerInfo, error: sellerError } = await supabase
+      .rpc('get_seller_public_info', { seller_user_id: id });
 
-    if (profileError || !profileData) {
-      console.error('Error fetching seller:', profileError);
+    if (sellerError || !sellerInfo || sellerInfo.length === 0) {
+      console.error('Error fetching seller:', sellerError);
       setLoading(false);
       return;
     }
 
-    setSeller(profileData);
+    const profileData = sellerInfo[0];
+    setSeller({
+      user_id: profileData.user_id,
+      full_name: profileData.full_name,
+      avatar_url: null, // Not exposed by secure function
+      shop_image: profileData.shop_image,
+      free_delivery: profileData.free_delivery
+    });
 
     // Fetch seller's approved products
     const { data: productsData, error: productsError } = await supabase
