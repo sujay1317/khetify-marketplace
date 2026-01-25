@@ -87,12 +87,12 @@ const AppSidebar: React.FC<AppSidebarProps> = memo(({ children }) => {
                   <User className="w-6 h-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{profile?.full_name || 'User'}</p>
+                  <p className="font-semibold truncate">{profile?.full_name || user.email?.split('@')[0] || 'User'}</p>
                   <Badge 
                     variant={role === 'admin' ? 'destructive' : role === 'seller' ? 'default' : 'secondary'} 
-                    className="text-xs mt-1"
+                    className="text-xs mt-1 capitalize"
                   >
-                    {role}
+                    {role || 'customer'}
                   </Badge>
                 </div>
               </div>
