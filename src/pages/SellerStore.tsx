@@ -207,13 +207,6 @@ const SellerStore: React.FC = () => {
                   {seller.full_name || t('unknownSeller')}
                 </h1>
               </div>
-              
-              <p className="text-muted-foreground mb-2">
-                {t('sellerSince')} {new Date(seller.created_at).toLocaleDateString('en-IN', { 
-                  year: 'numeric', 
-                  month: 'long' 
-                })}
-              </p>
 
               {/* Free Delivery Badge */}
               {seller.free_delivery && (
