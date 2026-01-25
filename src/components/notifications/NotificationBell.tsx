@@ -81,12 +81,9 @@ const NotificationBell: React.FC = () => {
     };
   }, [user, playNotification, isSellerOrAdmin]);
 
-  const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read
-    await markAsRead(notification.id);
-    
-    // Close the dropdown
-    setIsOpen(false);
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read (fire and forget)
+    markAsRead(notification.id);
     
     // Navigate based on notification type
     if (notification.order_id) {
@@ -177,7 +174,7 @@ const NotificationBell: React.FC = () => {
               className={`flex items-start gap-3 p-3 cursor-pointer hover:bg-accent ${
                 !notification.is_read ? 'bg-primary/5' : ''
               }`}
-              onClick={() => handleNotificationClick(notification)}
+              onSelect={() => handleNotificationClick(notification)}
             >
               <span className="text-lg">{getTypeIcon(notification.type)}</span>
               <div className="flex-1 min-w-0">
