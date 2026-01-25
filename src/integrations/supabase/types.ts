@@ -569,6 +569,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_profile_name: {
+        Args: { profile_user_id: string }
+        Returns: string
+      }
       get_seller_public_info: {
         Args: { seller_user_id: string }
         Returns: {

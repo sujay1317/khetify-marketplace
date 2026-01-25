@@ -59,17 +59,20 @@ const Wishlist: React.FC = () => {
       return;
     }
 
-    // Fetch seller profiles
+    // Fetch seller profiles using secure RPC function
     const sellerIds = [...new Set(productsData.map(p => p.seller_id))];
-    const { data: profilesData } = await supabase
-      .from('profiles')
-      .select('user_id, full_name')
-      .in('user_id', sellerIds);
-
     const sellerMap: Record<string, string> = {};
-    profilesData?.forEach(p => {
-      sellerMap[p.user_id] = p.full_name || t('unknownSeller');
-    });
+    
+    for (const sellerId of sellerIds) {
+      const { data: sellerInfo } = await supabase
+        .rpc('get_seller_public_info', { seller_user_id: sellerId });
+      
+      if (sellerInfo && sellerInfo.length > 0) {
+        sellerMap[sellerId] = sellerInfo[0].full_name || t('unknownSeller');
+      } else {
+        sellerMap[sellerId] = t('unknownSeller');
+      }
+    }
 
     // Transform products
     const transformedProducts: WishlistProduct[] = productsData.map(p => {

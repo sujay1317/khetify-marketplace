@@ -23,18 +23,22 @@ const FeaturedProductsSection: React.FC = memo(() => {
 
     if (!error && data) {
       const sellerIds = [...new Set(data.map(p => p.seller_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, free_delivery')
-        .in('user_id', sellerIds);
-
       const sellerMap: Record<string, { name: string; freeDelivery: boolean }> = {};
-      profilesData?.forEach((profile) => {
-        sellerMap[profile.user_id] = {
-          name: profile.full_name || 'Unknown Seller',
-          freeDelivery: profile.free_delivery || false,
-        };
-      });
+      
+      // Use secure RPC function for each seller
+      for (const sellerId of sellerIds) {
+        const { data: sellerInfo } = await supabase
+          .rpc('get_seller_public_info', { seller_user_id: sellerId });
+        
+        if (sellerInfo && sellerInfo.length > 0) {
+          sellerMap[sellerId] = {
+            name: sellerInfo[0].full_name || 'Unknown Seller',
+            freeDelivery: sellerInfo[0].free_delivery || false,
+          };
+        } else {
+          sellerMap[sellerId] = { name: 'Unknown Seller', freeDelivery: false };
+        }
+      }
 
       const products: Product[] = data.map((p) => ({
         id: p.id,

@@ -135,14 +135,16 @@ const FarmerForum = () => {
 
       if (!postsData || postsData.length === 0) return [];
 
-      // Fetch profiles separately
+      // Fetch profiles using secure RPC function
       const userIds = [...new Set(postsData.map(p => p.user_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', userIds);
-
-      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+      const profilesMap = new Map<string, { user_id: string; full_name: string | null }>();
+      
+      for (const userId of userIds) {
+        const { data: userName } = await supabase
+          .rpc('get_public_profile_name', { profile_user_id: userId });
+        
+        profilesMap.set(userId, { user_id: userId, full_name: userName || null });
+      }
 
       // Check if user has liked each post
       let likedPostIds = new Set<string>();
@@ -179,14 +181,16 @@ const FarmerForum = () => {
       if (error) throw error;
       if (!commentsData || commentsData.length === 0) return [];
 
-      // Fetch profiles separately
+      // Fetch profiles using secure RPC function
       const userIds = [...new Set(commentsData.map(c => c.user_id))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', userIds);
-
-      const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+      const profilesMap = new Map<string, { user_id: string; full_name: string | null }>();
+      
+      for (const userId of userIds) {
+        const { data: userName } = await supabase
+          .rpc('get_public_profile_name', { profile_user_id: userId });
+        
+        profilesMap.set(userId, { user_id: userId, full_name: userName || null });
+      }
 
       return commentsData.map(comment => ({
         ...comment,

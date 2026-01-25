@@ -74,12 +74,13 @@ const ProductDetail: React.FC = () => {
       return;
     }
 
-    // Fetch seller profile
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('user_id', productData.seller_id)
-      .maybeSingle();
+    // Fetch seller profile using secure RPC function
+    const { data: sellerInfo } = await supabase
+      .rpc('get_seller_public_info', { seller_user_id: productData.seller_id });
+    
+    const sellerName = (sellerInfo && sellerInfo.length > 0) 
+      ? sellerInfo[0].full_name || 'Unknown Seller' 
+      : 'Unknown Seller';
 
     // Fetch reviews for this product to calculate rating
     const { data: reviewsData } = await supabase
@@ -107,7 +108,7 @@ const ProductDetail: React.FC = () => {
       stock: productData.stock || 0,
       unit: productData.unit || 'kg',
       sellerId: productData.seller_id,
-      sellerName: profileData?.full_name || 'Unknown Seller',
+      sellerName: sellerName,
       rating: avgRating,
       reviews: reviewCount,
       isOrganic: productData.is_organic || false,
@@ -145,15 +146,19 @@ const ProductDetail: React.FC = () => {
 
     if (relatedData) {
       const sellerIds = [...new Set(relatedData.map(p => p.seller_id))];
-      const { data: sellersData } = await supabase
-        .from('profiles')
-        .select('user_id, full_name')
-        .in('user_id', sellerIds);
-
       const sellerMap: Record<string, string> = {};
-      sellersData?.forEach(s => {
-        sellerMap[s.user_id] = s.full_name || 'Unknown Seller';
-      });
+      
+      // Use secure RPC function for each seller
+      for (const sellerId of sellerIds) {
+        const { data: sellerInfo } = await supabase
+          .rpc('get_seller_public_info', { seller_user_id: sellerId });
+        
+        if (sellerInfo && sellerInfo.length > 0) {
+          sellerMap[sellerId] = sellerInfo[0].full_name || 'Unknown Seller';
+        } else {
+          sellerMap[sellerId] = 'Unknown Seller';
+        }
+      }
 
       // Fetch reviews for related products
       const relatedIds = relatedData.map(p => p.id);
