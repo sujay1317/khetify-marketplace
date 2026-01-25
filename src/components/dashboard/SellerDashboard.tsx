@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, TrendingUp, Store, Sprout, ArrowRight, Plus } from 'lucide-react';
+import { Package, TrendingUp, Store, Sprout, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const SellerDashboard: React.FC = () => {
+const SellerDashboard: React.FC = memo(() => {
   const { profile, user } = useAuth();
   const { t } = useLanguage();
   const [stats, setStats] = useState({ products: 0, pendingOrders: 0 });
@@ -47,10 +47,10 @@ const SellerDashboard: React.FC = () => {
   };
 
   const quickActions = [
-    { icon: Package, label: t('myProducts'), path: '/seller', color: 'from-emerald-500 to-green-600', stat: stats.products },
-    { icon: TrendingUp, label: t('orders'), path: '/seller', color: 'from-blue-500 to-indigo-600', stat: stats.pendingOrders },
-    { icon: Store, label: t('viewStore'), path: `/store/${user?.id}`, color: 'from-purple-500 to-pink-500' },
-    { icon: Sprout, label: t('farmerCorner'), path: '/farmer-corner', color: 'from-lime-500 to-green-500' },
+    { icon: Package, label: t('myProducts') || 'My Products', path: '/seller', color: 'from-emerald-500 to-green-600', stat: stats.products },
+    { icon: TrendingUp, label: t('orders') || 'Orders', path: '/seller', color: 'from-blue-500 to-indigo-600', stat: stats.pendingOrders },
+    { icon: Store, label: t('viewStore') || 'View Store', path: `/store/${user?.id}`, color: 'from-purple-500 to-pink-500' },
+    { icon: Sprout, label: t('farmerCorner') || 'Farmer Corner', path: '/farmer-corner', color: 'from-lime-500 to-green-500' },
   ];
 
   return (
@@ -74,7 +74,7 @@ const SellerDashboard: React.FC = () => {
                     <Badge variant="default" className="bg-emerald-600">{t('seller')}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {t('manageListings')}
+                    {t('manageListings') || 'Manage your products and orders'}
                   </p>
                 </div>
               </div>
@@ -109,6 +109,8 @@ const SellerDashboard: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+
+SellerDashboard.displayName = 'SellerDashboard';
 
 export default SellerDashboard;
