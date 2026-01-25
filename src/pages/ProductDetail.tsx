@@ -81,6 +81,10 @@ const ProductDetail: React.FC = () => {
     const sellerName = (sellerInfo && sellerInfo.length > 0) 
       ? sellerInfo[0].full_name || 'Unknown Seller' 
       : 'Unknown Seller';
+    
+    const sellerFreeDelivery = (sellerInfo && sellerInfo.length > 0)
+      ? sellerInfo[0].free_delivery || false
+      : false;
 
     // Fetch reviews for this product to calculate rating
     const { data: reviewsData } = await supabase
@@ -113,6 +117,7 @@ const ProductDetail: React.FC = () => {
       reviews: reviewCount,
       isOrganic: productData.is_organic || false,
       isFeatured: false,
+      freeDelivery: sellerFreeDelivery,
     };
 
     setProduct(transformedProduct);
@@ -146,7 +151,7 @@ const ProductDetail: React.FC = () => {
 
     if (relatedData) {
       const sellerIds = [...new Set(relatedData.map(p => p.seller_id))];
-      const sellerMap: Record<string, string> = {};
+      const sellerMap: Record<string, { name: string; freeDelivery: boolean }> = {};
       
       // Use secure RPC function for each seller
       for (const sellerId of sellerIds) {
@@ -154,9 +159,12 @@ const ProductDetail: React.FC = () => {
           .rpc('get_seller_public_info', { seller_user_id: sellerId });
         
         if (sellerInfo && sellerInfo.length > 0) {
-          sellerMap[sellerId] = sellerInfo[0].full_name || 'Unknown Seller';
+          sellerMap[sellerId] = {
+            name: sellerInfo[0].full_name || 'Unknown Seller',
+            freeDelivery: sellerInfo[0].free_delivery || false,
+          };
         } else {
-          sellerMap[sellerId] = 'Unknown Seller';
+          sellerMap[sellerId] = { name: 'Unknown Seller', freeDelivery: false };
         }
       }
 
@@ -192,11 +200,12 @@ const ProductDetail: React.FC = () => {
         stock: p.stock || 0,
         unit: p.unit || 'kg',
         sellerId: p.seller_id,
-        sellerName: sellerMap[p.seller_id] || 'Unknown Seller',
+        sellerName: sellerMap[p.seller_id]?.name || 'Unknown Seller',
         rating: ratingsMap[p.id]?.avg || 0,
         reviews: ratingsMap[p.id]?.count || 0,
         isOrganic: p.is_organic || false,
         isFeatured: false,
+        freeDelivery: sellerMap[p.seller_id]?.freeDelivery || false,
       })));
     }
 

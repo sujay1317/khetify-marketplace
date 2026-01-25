@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Trash2, ShoppingCart, Loader2 } from 'lucide-react';
+import { Heart, Trash2, ShoppingCart, Loader2, Truck } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -61,22 +61,26 @@ const Wishlist: React.FC = () => {
 
     // Fetch seller profiles using secure RPC function
     const sellerIds = [...new Set(productsData.map(p => p.seller_id))];
-    const sellerMap: Record<string, string> = {};
+    const sellerMap: Record<string, { name: string; freeDelivery: boolean }> = {};
     
     for (const sellerId of sellerIds) {
       const { data: sellerInfo } = await supabase
         .rpc('get_seller_public_info', { seller_user_id: sellerId });
       
       if (sellerInfo && sellerInfo.length > 0) {
-        sellerMap[sellerId] = sellerInfo[0].full_name || t('unknownSeller');
+        sellerMap[sellerId] = {
+          name: sellerInfo[0].full_name || t('unknownSeller'),
+          freeDelivery: sellerInfo[0].free_delivery || false,
+        };
       } else {
-        sellerMap[sellerId] = t('unknownSeller');
+        sellerMap[sellerId] = { name: t('unknownSeller'), freeDelivery: false };
       }
     }
 
     // Transform products
     const transformedProducts: WishlistProduct[] = productsData.map(p => {
       const wishlistItem = wishlistData.find(w => w.product_id === p.id);
+      const sellerInfo = sellerMap[p.seller_id];
       return {
         id: p.id,
         name: p.name,
@@ -90,11 +94,12 @@ const Wishlist: React.FC = () => {
         stock: p.stock || 0,
         unit: p.unit || 'kg',
         sellerId: p.seller_id,
-        sellerName: sellerMap[p.seller_id] || t('unknownSeller'),
+        sellerName: sellerInfo?.name || t('unknownSeller'),
         rating: 4.5,
         reviews: 0,
         isOrganic: p.is_organic || false,
         isFeatured: false,
+        freeDelivery: sellerInfo?.freeDelivery || false,
         wishlist_id: wishlistItem?.id || '',
       };
     });
@@ -191,7 +196,15 @@ const Wishlist: React.FC = () => {
                       {product.name}
                     </h3>
                   </Link>
-                  <p className="text-sm text-muted-foreground">{product.sellerName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">{product.sellerName}</p>
+                    {product.freeDelivery && (
+                      <span className="inline-flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        <Truck className="w-3 h-3" />
+                        Free
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-primary">₹{product.price}</span>
                     {product.originalPrice && (
