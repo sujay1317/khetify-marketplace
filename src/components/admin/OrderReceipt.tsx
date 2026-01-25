@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import logo from '@/assets/khetify-logo-new.png';
 
@@ -126,6 +127,7 @@ const OrderReceipt: React.FC<OrderReceiptProps> = ({ open, onClose, data }) => {
               </Button>
             </div>
           </DialogTitle>
+          <DialogDescription>View and print order details for #{data.orderId.slice(0, 8)}</DialogDescription>
         </DialogHeader>
 
         <div ref={receiptRef} className="receipt bg-white p-5 border-2 border-dashed border-muted rounded-lg">

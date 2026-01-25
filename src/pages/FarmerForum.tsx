@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -305,6 +305,7 @@ const FarmerForum = () => {
                 <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Create New Post</DialogTitle>
+                    <DialogDescription>Share your thoughts, questions, or farming experiences with the community.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <Input
@@ -507,13 +508,13 @@ const FarmerForum = () => {
                   )}
                 </div>
                 <DialogTitle className="text-xl">{selectedPost.title}</DialogTitle>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
+                <DialogDescription className="flex items-center gap-3 text-sm text-muted-foreground mt-2">
                   <span className="flex items-center gap-1">
                     <User className="w-4 h-4" />
                     {selectedPost.profiles?.full_name || 'Anonymous'}
                   </span>
                   <span>{formatDistanceToNow(new Date(selectedPost.created_at), { addSuffix: true })}</span>
-                </div>
+                </DialogDescription>
               </DialogHeader>
 
               <div className="py-4">
