@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, ShoppingCart, User, Heart, LayoutDashboard, Package, Sprout, MessageSquare, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import khetifyLogo from '@/assets/khetify-logo.png';
+import khetifyLogo from '@/assets/khetify-logo-cart.png';
 
 const MobileBottomNav: React.FC = memo(() => {
   const location = useLocation();
