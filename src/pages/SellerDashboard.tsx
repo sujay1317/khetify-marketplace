@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -604,6 +605,7 @@ const SellerDashboard: React.FC = () => {
                     <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle>{editingProduct ? t('editProduct') : t('addNewProduct')}</DialogTitle>
+                        <DialogDescription>{editingProduct ? 'Update product details below.' : 'Fill in the product information to add it to your shop.'}</DialogDescription>
                       </DialogHeader>
                       <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
