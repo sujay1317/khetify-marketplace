@@ -39,9 +39,10 @@ const SellerStore: React.FC = () => {
     setLoading(true);
 
     // Fetch seller profile
+    // Use specific field selection to avoid exposing sensitive data like phone numbers
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('*')
+      .select('user_id, full_name, shop_image, avatar_url, free_delivery')
       .eq('user_id', id)
       .maybeSingle();
 
