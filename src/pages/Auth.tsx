@@ -53,20 +53,27 @@ const Auth: React.FC = () => {
       if (isLogin) {
         const { error } = await signIn(email, password);
         if (error) {
-          toast.error(error.message);
+          console.error('Login error:', error);
+          toast.error(error.message || 'Login failed. Please check your credentials.');
         } else {
           toast.success('Login successful!');
         }
       } else {
         const { error } = await signUp(email, password, fullName, phone, selectedRole);
         if (error) {
-          toast.error(error.message);
+          console.error('Signup error:', error);
+          toast.error(error.message || 'Signup failed. Please try again.');
         } else {
-          toast.success('Account created successfully!');
+          toast.success('Account created successfully! You can now login.');
         }
       }
-    } catch (err) {
-      toast.error('An unexpected error occurred');
+    } catch (err: any) {
+      console.error('Auth unexpected error:', err);
+      if (err?.message?.includes('fetch') || err?.message?.includes('network')) {
+        toast.error('Network error. Please check your internet connection and try again.');
+      } else {
+        toast.error(err?.message || 'An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
