@@ -60,7 +60,7 @@ const Products: React.FC = () => {
     searchParams.get('category') || 'all'
   );
   const [sortBy, setSortBy] = useState('featured');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [showOrganic, setShowOrganic] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -266,7 +266,7 @@ const Products: React.FC = () => {
   const activeFiltersCount = [
     selectedCategory !== 'all',
     showOrganic,
-    priceRange[0] > 0 || priceRange[1] < 10000,
+    priceRange[0] > 0 || priceRange[1] < 100000,
   ].filter(Boolean).length;
 
   if (loading) {
