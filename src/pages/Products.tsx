@@ -179,6 +179,7 @@ const Products: React.FC = () => {
       freeDelivery: sellerMap[p.seller_id]?.freeDelivery || false,
     }));
 
+    console.log('Products fetched:', transformedProducts.length, transformedProducts.map(p => p.name));
     setProducts(transformedProducts);
     setLoading(false);
   };
