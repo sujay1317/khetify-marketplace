@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // Defer Supabase calls with setTimeout
         if (session?.user) {
           setTimeout(() => {
-            fetchUserData(session.user);
+            fetchUserData(session.user.id);
           }, 0);
         } else {
           setProfile(null);
@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchUserData(session.user);
+        fetchUserData(session.user.id);
       } else {
         setLoading(false);
       }
@@ -68,9 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserData = async (authUser: User) => {
-    const userId = authUser.id;
-
+  const fetchUserData = async (userId: string) => {
     try {
       // Fetch profile
       const { data: profileData } = await supabase
@@ -81,23 +79,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (profileData) {
         setProfile(profileData as Profile);
-      } else {
-        // Self-heal missing profile row
-        await supabase.from('profiles').insert({
-          user_id: userId,
-          full_name: (authUser.user_metadata?.full_name as string | undefined) ?? null,
-          phone: (authUser.user_metadata?.phone as string | undefined) ?? null,
-        });
-
-        const { data: createdProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (createdProfile) {
-          setProfile(createdProfile as Profile);
-        }
       }
 
       // Fetch role
@@ -109,13 +90,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (roleData) {
         setRole(roleData.role as AppRole);
-      } else {
-        // Self-heal missing role row
-        await supabase.from('user_roles').insert({
-          user_id: userId,
-          role: 'customer',
-        });
-        setRole('customer');
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
