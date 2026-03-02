@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import Header from '@/components/layout/Header';
+import NetworkDiagnostics from '@/components/network/NetworkDiagnostics';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -83,6 +84,9 @@ const Auth: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10">
       <Header />
       <main className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-80px)]">
+        <div className="w-full max-w-md">
+          <NetworkDiagnostics />
+        </div>
         <Card className="w-full max-w-md p-8 animate-scale-in">
           <div className="text-center mb-8">
             <img 
