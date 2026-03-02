@@ -54,7 +54,18 @@ const Auth: React.FC = () => {
         const { error } = await signIn(email, password);
         if (error) {
           console.error('Login error:', error);
-          toast.error(error.message || 'Login failed. Please check your credentials.');
+          const errorMessage = error.message || '';
+
+          if (
+            errorMessage.includes('Failed to fetch') ||
+            errorMessage.includes('ERR_CONNECTION_TIMED_OUT')
+          ) {
+            toast.error('Connection timeout. Please check internet, disable VPN/extension, and try again.');
+          } else if (errorMessage.toLowerCase().includes('invalid login credentials')) {
+            toast.error('Invalid email or password. Please try again.');
+          } else {
+            toast.error(errorMessage || 'Login failed. Please check your credentials.');
+          }
         } else {
           toast.success('Login successful!');
         }
