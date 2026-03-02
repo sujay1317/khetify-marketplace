@@ -52,6 +52,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const sanitizePersistedAuthState = () => {
+    try {
+      const keys = Object.keys(localStorage).filter(
+        (key) => key.startsWith('sb-') && key.includes('auth-token')
+      );
+
+      for (const key of keys) {
+        const rawValue = localStorage.getItem(key);
+        if (!rawValue) continue;
+
+        const parsed = JSON.parse(rawValue);
+        const refreshToken =
+          parsed?.currentSession?.refresh_token ?? parsed?.session?.refresh_token ?? parsed?.refresh_token;
+
+        if (typeof refreshToken === 'string' && refreshToken.length < 20) {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        }
+      }
+    } catch {
+      clearPersistedAuthState();
+    }
+  };
+
   const resetAuthState = () => {
     setSession(null);
     setUser(null);
@@ -78,6 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const initializeAuth = async () => {
       try {
+        sanitizePersistedAuthState();
         const { data, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -198,12 +223,34 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signIn = async (email: string, password: string) => {
     clearPersistedAuthState();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const attemptSignIn = () =>
+      supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    return { error: error as Error | null };
+    try {
+      let { error } = await attemptSignIn();
+
+      if (error?.message?.includes('Failed to fetch')) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        ({ error } = await attemptSignIn());
+      }
+
+      return { error: error as Error | null };
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const { error } = await attemptSignIn();
+          return { error: error as Error | null };
+        } catch (retryErr) {
+          return { error: retryErr as Error };
+        }
+      }
+
+      return { error: err as Error };
+    }
   };
 
   const signOut = async () => {
