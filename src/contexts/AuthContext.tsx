@@ -34,65 +34,143 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer Supabase calls with setTimeout
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserData(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-          setRole(null);
-          setLoading(false);
-        }
-      }
-    );
+  const clearPersistedAuthState = () => {
+    try {
+      const storageKeys = [
+        ...Object.keys(localStorage),
+        ...Object.keys(sessionStorage),
+      ];
 
-    // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      storageKeys
+        .filter((key) => key.includes('auth-token') || key.startsWith('sb-'))
+        .forEach((key) => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        });
+    } catch (error) {
+      console.warn('Could not clear persisted auth state:', error);
+    }
+  };
+
+  const resetAuthState = () => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setRole(null);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+
       if (session?.user) {
-        fetchUserData(session.user.id);
+        setTimeout(() => {
+          fetchUserData(session.user);
+        }, 0);
       } else {
+        setProfile(null);
+        setRole(null);
         setLoading(false);
       }
     });
 
+    const initializeAuth = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('Session recovery error:', error);
+          clearPersistedAuthState();
+          await supabase.auth.signOut();
+          resetAuthState();
+          return;
+        }
+
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+
+        if (data.session?.user) {
+          await fetchUserData(data.session.user);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+        clearPersistedAuthState();
+        resetAuthState();
+      }
+    };
+
+    void initializeAuth();
+
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserData = async (userId: string) => {
+  const fetchUserData = async (authUser: User) => {
     try {
-      // Fetch profile
-      const { data: profileData } = await supabase
+      const userId = authUser.id;
+
+      // Fetch or create profile
+      let { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (profileData) {
-        setProfile(profileData as Profile);
+      if (!profileData) {
+        await supabase.from('profiles').insert({
+          user_id: userId,
+          full_name: authUser.user_metadata?.full_name ?? null,
+          phone: authUser.user_metadata?.phone ?? null,
+        });
+
+        const { data: createdProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        profileData = createdProfile;
       }
 
-      // Fetch role
-      const { data: roleData } = await supabase
+      setProfile((profileData as Profile) ?? null);
+
+      // Fetch or create role
+      let { data: roleData } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (roleData) {
-        setRole(roleData.role as AppRole);
+      const metadataRole = authUser.user_metadata?.role;
+      const desiredRole: AppRole =
+        metadataRole === 'seller' || metadataRole === 'admin' ? metadataRole : 'customer';
+
+      if (!roleData && desiredRole !== 'admin') {
+        await supabase.from('user_roles').insert({
+          user_id: userId,
+          role: desiredRole,
+        });
+
+        const { data: createdRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        roleData = createdRole;
       }
+
+      setRole((roleData?.role as AppRole | undefined) ?? (desiredRole !== 'admin' ? desiredRole : null));
     } catch (error) {
       console.error('Error fetching user data:', error);
+
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        clearPersistedAuthState();
+        resetAuthState();
+      }
     } finally {
       setLoading(false);
     }
@@ -118,6 +196,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const signIn = async (email: string, password: string) => {
+    clearPersistedAuthState();
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
