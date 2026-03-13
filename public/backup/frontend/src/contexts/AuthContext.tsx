@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, usersApi, apiClient, AuthResponse, ProfileDto } from '@/services/api';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'admin' | 'seller' | 'customer';
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface Profile {
   id: string;
@@ -20,7 +16,7 @@ interface Profile {
 
 interface AuthContextType {
   user: User | null;
-  session: { access_token: string } | null;
+  session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
   loading: boolean;
@@ -31,104 +27,234 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function mapProfileDto(dto: ProfileDto): Profile {
-  return {
-    id: dto.userId,
-    user_id: dto.userId,
-    full_name: dto.fullName,
-    phone: dto.phone,
-    avatar_url: dto.avatarUrl,
-    shop_image: dto.shopImage,
-    free_delivery: dto.freeDelivery,
-  };
-}
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<{ access_token: string } | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('khetify_token');
-      if (!token) {
-        setLoading(false);
-        return;
+  const clearPersistedAuthState = () => {
+    try {
+      const storageKeys = [
+        ...Object.keys(localStorage),
+        ...Object.keys(sessionStorage),
+      ];
+
+      storageKeys
+        .filter((key) => key.includes('auth-token') || key.startsWith('sb-'))
+        .forEach((key) => {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        });
+    } catch (error) {
+      console.warn('Could not clear persisted auth state:', error);
+    }
+  };
+
+  const sanitizePersistedAuthState = () => {
+    try {
+      const keys = Object.keys(localStorage).filter(
+        (key) => key.startsWith('sb-') && key.includes('auth-token')
+      );
+
+      for (const key of keys) {
+        const rawValue = localStorage.getItem(key);
+        if (!rawValue) continue;
+
+        const parsed = JSON.parse(rawValue);
+        const refreshToken =
+          parsed?.currentSession?.refresh_token ?? parsed?.session?.refresh_token ?? parsed?.refresh_token;
+
+        if (typeof refreshToken === 'string' && refreshToken.length < 20) {
+          localStorage.removeItem(key);
+          sessionStorage.removeItem(key);
+        }
       }
+    } catch {
+      clearPersistedAuthState();
+    }
+  };
 
-      apiClient.setToken(token);
+  const resetAuthState = () => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setRole(null);
+    setLoading(false);
+  };
 
-      try {
-        const me = await authApi.getMe();
-        const profileDto = await usersApi.getProfile();
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
 
-        setUser({ id: me.id, email: profileDto.email || '' });
-        setSession({ access_token: token });
-        setProfile(mapProfileDto(profileDto));
-        setRole(me.role as AppRole);
-      } catch {
-        // Token invalid/expired
-        apiClient.setToken(null);
-        localStorage.removeItem('khetify_token');
-        localStorage.removeItem('khetify_refresh_token');
-      } finally {
+      if (session?.user) {
+        setTimeout(() => {
+          fetchUserData(session.user);
+        }, 0);
+      } else {
+        setProfile(null);
+        setRole(null);
         setLoading(false);
+      }
+    });
+
+    const initializeAuth = async () => {
+      try {
+        sanitizePersistedAuthState();
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('Session recovery error:', error);
+          clearPersistedAuthState();
+          await supabase.auth.signOut();
+          resetAuthState();
+          return;
+        }
+
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+
+        if (data.session?.user) {
+          await fetchUserData(data.session.user);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+        clearPersistedAuthState();
+        resetAuthState();
       }
     };
 
-    initAuth();
+    void initializeAuth();
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleAuthResponse = async (response: AuthResponse) => {
-    apiClient.setToken(response.token);
-    localStorage.setItem('khetify_refresh_token', response.refreshToken);
-
-    setUser({ id: response.user.id, email: response.user.email });
-    setSession({ access_token: response.token });
-    setRole(response.user.role as AppRole);
-
+  const fetchUserData = async (authUser: User) => {
     try {
-      const profileDto = await usersApi.getProfile();
-      setProfile(mapProfileDto(profileDto));
-    } catch {
-      setProfile({
-        id: response.user.id,
-        user_id: response.user.id,
-        full_name: response.user.fullName,
-        phone: null,
-        avatar_url: null,
-        shop_image: null,
-        free_delivery: null,
-      });
+      const userId = authUser.id;
+
+      // Fetch or create profile
+      let { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!profileData) {
+        await supabase.from('profiles').insert({
+          user_id: userId,
+          full_name: authUser.user_metadata?.full_name ?? null,
+          phone: authUser.user_metadata?.phone ?? null,
+        });
+
+        const { data: createdProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        profileData = createdProfile;
+      }
+
+      setProfile((profileData as Profile) ?? null);
+
+      // Fetch or create role
+      let { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      const metadataRole = authUser.user_metadata?.role;
+      const desiredRole: AppRole =
+        metadataRole === 'seller' || metadataRole === 'admin' ? metadataRole : 'customer';
+
+      if (!roleData && desiredRole !== 'admin') {
+        await supabase.from('user_roles').insert({
+          user_id: userId,
+          role: desiredRole,
+        });
+
+        const { data: createdRole } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        roleData = createdRole;
+      }
+
+      setRole((roleData?.role as AppRole | undefined) ?? (desiredRole !== 'admin' ? desiredRole : null));
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        clearPersistedAuthState();
+        resetAuthState();
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, phone: string, _role: AppRole) => {
-    try {
-      const response = await authApi.register({ email, password, fullName, phone });
-      await handleAuthResponse(response);
-      return { error: null };
-    } catch (err) {
-      return { error: err as Error };
-    }
+  const signUp = async (email: string, password: string, fullName: string, phone: string, role: AppRole) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          phone: phone,
+          role: role
+        }
+      }
+    });
+
+    return { error: error as Error | null };
   };
 
   const signIn = async (email: string, password: string) => {
+    clearPersistedAuthState();
+
+    const attemptSignIn = () =>
+      supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
     try {
-      const response = await authApi.login({ email, password });
-      await handleAuthResponse(response);
-      return { error: null };
+      let { error } = await attemptSignIn();
+
+      if (error?.message?.includes('Failed to fetch')) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        ({ error } = await attemptSignIn());
+      }
+
+      return { error: error as Error | null };
     } catch (err) {
+      if (err instanceof Error && err.message.includes('Failed to fetch')) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          const { error } = await attemptSignIn();
+          return { error: error as Error | null };
+        } catch (retryErr) {
+          return { error: retryErr as Error };
+        }
+      }
+
       return { error: err as Error };
     }
   };
 
   const signOut = async () => {
-    apiClient.setToken(null);
-    localStorage.removeItem('khetify_token');
-    localStorage.removeItem('khetify_refresh_token');
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -136,7 +262,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      session,
+      profile,
+      role,
+      loading,
+      signUp,
+      signIn,
+      signOut
+    }}>
       {children}
     </AuthContext.Provider>
   );

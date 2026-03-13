@@ -1,35 +1,44 @@
 import { useState, useEffect, useCallback } from 'react';
-import { wishlistApi } from '@/services/api';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+interface WishlistItem {
+  id: string;
+  product_id: string;
+  created_at: string;
+}
+
 export const useWishlist = () => {
   const { user } = useAuth();
-  const [wishlistItems, setWishlistItems] = useState<string[]>([]);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchWishlist = useCallback(async () => {
     if (!user) {
-      setWishlistItems([]);
+      setWishlist([]);
       return;
     }
 
     setLoading(true);
-    try {
-      const data = await wishlistApi.getAll();
-      setWishlistItems(data.map(item => item.productId));
-    } catch (error) {
-      console.error('Error fetching wishlist:', error);
-    } finally {
-      setLoading(false);
+    const { data, error } = await supabase
+      .from('wishlists')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (!error && data) {
+      setWishlist(data);
     }
+    setLoading(false);
   }, [user]);
 
   useEffect(() => {
     fetchWishlist();
   }, [fetchWishlist]);
 
-  const isInWishlist = (productId: string) => wishlistItems.includes(productId);
+  const isInWishlist = useCallback((productId: string) => {
+    return wishlist.some(item => item.product_id === productId);
+  }, [wishlist]);
 
   const toggleWishlist = async (productId: string) => {
     if (!user) {
@@ -37,20 +46,42 @@ export const useWishlist = () => {
       return;
     }
 
-    try {
-      if (isInWishlist(productId)) {
-        await wishlistApi.remove(productId);
-        setWishlistItems(prev => prev.filter(id => id !== productId));
-        toast.success('Removed from wishlist');
+    const isCurrentlyInWishlist = isInWishlist(productId);
+
+    if (isCurrentlyInWishlist) {
+      const { error } = await supabase
+        .from('wishlists')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('product_id', productId);
+
+      if (error) {
+        toast.error('Failed to remove from wishlist');
       } else {
-        await wishlistApi.add(productId);
-        setWishlistItems(prev => [...prev, productId]);
+        setWishlist(prev => prev.filter(item => item.product_id !== productId));
+        toast.success('Removed from wishlist');
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('wishlists')
+        .insert({ user_id: user.id, product_id: productId })
+        .select()
+        .single();
+
+      if (error) {
+        toast.error('Failed to add to wishlist');
+      } else {
+        setWishlist(prev => [...prev, data]);
         toast.success('Added to wishlist');
       }
-    } catch (error) {
-      toast.error('Failed to update wishlist');
     }
   };
 
-  return { wishlistItems, isInWishlist, toggleWishlist, loading, refetch: fetchWishlist };
+  return {
+    wishlist,
+    loading,
+    isInWishlist,
+    toggleWishlist,
+    refetch: fetchWishlist,
+  };
 };
