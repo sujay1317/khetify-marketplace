@@ -9,4 +9,5 @@ public interface IAuthService
     Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto);
     Task<string> GeneratePasswordResetTokenAsync(string email);
     Task ResetPasswordAsync(string token, string newPassword);
+    Task<string?> GetUserEmailAsync(Guid userId);
 }
