@@ -37,8 +37,9 @@ export const useWishlist = () => {
     const existing = wishlistItems.find(item => item.productId === productId);
     if (existing) {
       try {
-        await wishlistApi.remove(existing.id);
-        setWishlistItems(prev => prev.filter(item => item.id !== existing.id));
+        // Backend DELETE /wishlist/{productId} uses productId, not wishlist item id
+        await wishlistApi.remove(productId);
+        setWishlistItems(prev => prev.filter(item => item.productId !== productId));
         toast.success('Removed from wishlist');
       } catch {
         toast.error('Failed to remove from wishlist');
