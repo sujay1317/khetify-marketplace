@@ -96,7 +96,7 @@ stages:
         npm run build
       displayName: 'Build Frontend'
       env:
-        VITE_API_URL: $(API_URL)
+        VITE_API_URL: https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net/api
 
     - task: PublishBuildArtifacts@1
       displayName: 'Upload Frontend Artifact'

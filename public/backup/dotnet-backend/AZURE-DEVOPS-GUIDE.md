@@ -1,69 +1,87 @@
 # Khetify - Azure DevOps Deployment Guide
 
-## 📋 Prerequisites
-- Azure DevOps account (https://dev.azure.com)
-- Azure subscription with:
-  - Azure App Service (Linux)
-  - Azure Database for PostgreSQL Flexible Server
-  - Azure Static Web Apps (for frontend)
-- .NET 10 SDK installed locally
-- Git installed
+## 🏗️ Your Azure Resources (Already Created)
+
+| Resource | Name | Details |
+|----------|------|---------|
+| **PostgreSQL** | `khetify-db-server` | PostgreSQL 18, Burstable B2s, Central India |
+| **App Service** | `khetify-api` | .NET 10, Linux, Basic SKU |
+| **Resource Group** | `khetify-rg` | Central India |
+| **DB Host** | `khetify-db-server.postgres.database.azure.com` | Password Auth + AD Auth |
+| **API URL** | `https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net` | HTTPS enabled |
 
 ---
 
-## 🚀 Step 1: Create Azure DevOps Project
+## 🚀 Step 1: Create Database on PostgreSQL Server
 
-1. Go to https://dev.azure.com
-2. Click **New Project** → Name: `Khetify` → Visibility: Private → Create
-3. Go to **Repos** → Initialize or push existing repo
-
----
-
-## 🔗 Step 2: Push Code to Azure DevOps
+Your server is ready but you need to create the `khetify` database:
 
 ```bash
-# From the dotnet-backend folder
+# Connect to the server using psql
+psql "host=khetify-db-server.postgres.database.azure.com port=5432 dbname=postgres user=khetifyadmin sslmode=require"
+
+# Create the database
+CREATE DATABASE khetify;
+\q
+```
+
+Or via Azure Portal: Go to **khetify-db-server** → **Databases** → **+ Add** → Name: `khetify`
+
+---
+
+## 🔗 Step 2: Set App Service Configuration
+
+```bash
+# Set environment variables on the App Service
+az webapp config appsettings set \
+  --name khetify-api \
+  --resource-group khetify-rg \
+  --settings \
+    "ConnectionStrings__DefaultConnection=Host=khetify-db-server.postgres.database.azure.com;Port=5432;Database=khetify;Username=khetifyadmin;Password=YOUR_DB_PASSWORD;SSL Mode=Require;Trust Server Certificate=true" \
+    "Jwt__Secret=GENERATE-A-STRONG-SECRET-KEY-MINIMUM-32-CHARACTERS" \
+    "Jwt__Issuer=Khetify" \
+    "Jwt__Audience=KhetifyApp" \
+    "Cors__AllowedOrigins__0=http://localhost:5173" \
+    "Cors__AllowedOrigins__1=https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net" \
+    "ASPNETCORE_ENVIRONMENT=Production"
+```
+
+⚠️ Replace `YOUR_DB_PASSWORD` with the actual password you set for `khetifyadmin`.
+
+---
+
+## 🗃️ Step 3: Push Code to Azure DevOps
+
+### Create Azure DevOps Project
+1. Go to https://dev.azure.com
+2. **New Project** → Name: `Khetify` → Private → Create
+
+### Push Backend Code
+```bash
 cd public/backup/dotnet-backend
 
-# Initialize git (if not already)
 git init
 git add .
-git commit -m "Initial commit - Khetify .NET 10 backend"
+git commit -m "Khetify .NET 10 backend"
 
-# Add Azure DevOps remote
-git remote add origin https://dev.azure.com/{YOUR_ORG}/{YOUR_PROJECT}/_git/Khetify
-
-# Push
+# Add your Azure DevOps remote
+git remote add origin https://dev.azure.com/{YOUR_ORG}/Khetify/_git/Khetify-Backend
 git push -u origin main
 ```
 
-### Push Frontend separately:
+### Push Frontend Code
 ```bash
 cd public/backup/frontend
 
+# Create .env for production
+echo "VITE_API_URL=https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net/api" > .env
+
 git init
 git add .
-git commit -m "Initial commit - Khetify React frontend"
-
-# Create a separate repo or use a monorepo subfolder
-git remote add origin https://dev.azure.com/{YOUR_ORG}/{YOUR_PROJECT}/_git/Khetify-Frontend
+git commit -m "Khetify React frontend"
+git remote add origin https://dev.azure.com/{YOUR_ORG}/Khetify/_git/Khetify-Frontend
 git push -u origin main
 ```
-
----
-
-## 🗄️ Step 3: Set Up Azure Database for PostgreSQL
-
-1. **Azure Portal** → Create resource → Azure Database for PostgreSQL Flexible Server
-2. Settings:
-   - Server name: `khetify-db`
-   - Version: PostgreSQL 16
-   - Compute: Burstable B1ms (dev) or General Purpose D2s (prod)
-   - Storage: 32 GB
-3. Copy the connection string:
-   ```
-   Host=khetify-db.postgres.database.azure.com;Database=khetify;Username=khetifyadmin;Password={YOUR_PASSWORD};SSL Mode=Require;
-   ```
 
 ---
 
@@ -71,107 +89,65 @@ git push -u origin main
 
 Go to **Pipelines** → **Library** → **+ Variable Group** → Name: `khetify-secrets`
 
-Add these variables (mark sensitive ones as secret 🔒):
-
 | Variable | Value | Secret? |
 |----------|-------|---------|
 | `AZURE_SUBSCRIPTION` | Your Azure service connection name | No |
 | `AZURE_WEBAPP_NAME` | `khetify-api` | No |
-| `AZURE_SQL_CONNECTION_STRING` | PostgreSQL connection string | 🔒 Yes |
-| `AZURE_SQL_CONNECTION_STRING_STAGING` | Staging DB connection string | 🔒 Yes |
-| `JWT_SECRET_KEY` | Random 256-bit key | 🔒 Yes |
-| `API_URL` | `https://khetify-api.azurewebsites.net/api` | No |
-| `AZURE_STATIC_WEBAPP_TOKEN` | From Azure Static Web App | 🔒 Yes |
+| `AZURE_SQL_CONNECTION_STRING` | `Host=khetify-db-server.postgres.database.azure.com;Port=5432;Database=khetify;Username=khetifyadmin;Password=YOUR_PASSWORD;SSL Mode=Require;Trust Server Certificate=true` | 🔒 Yes |
+| `JWT_SECRET_KEY` | Your 32+ char secret | 🔒 Yes |
 
 ---
 
-## 🏗️ Step 5: Create Azure App Service
-
-```bash
-# Create resource group
-az group create --name khetify-rg --location centralindia
-
-# Create App Service Plan (Linux)
-az appservice plan create \
-  --name khetify-plan \
-  --resource-group khetify-rg \
-  --sku B1 \
-  --is-linux
-
-# Create Web App
-az webapp create \
-  --name khetify-api \
-  --resource-group khetify-rg \
-  --plan khetify-plan \
-  --runtime "DOTNETCORE:10.0"
-
-# Set environment variables
-az webapp config appsettings set \
-  --name khetify-api \
-  --resource-group khetify-rg \
-  --settings \
-    ConnectionStrings__DefaultConnection="YOUR_PG_CONNECTION_STRING" \
-    Jwt__Key="YOUR_JWT_SECRET" \
-    Jwt__Issuer="khetify-api" \
-    Jwt__Audience="khetify-app" \
-    ASPNETCORE_ENVIRONMENT="Production"
-```
-
----
-
-## 🗃️ Step 6: Run Initial Database Migration
-
-```bash
-# Locally (one-time setup)
-cd src/Khetify.API
-
-# Set connection string
-export ConnectionStrings__DefaultConnection="Host=khetify-db.postgres.database.azure.com;Database=khetify;Username=khetifyadmin;Password=YOUR_PASSWORD;SSL Mode=Require;"
-
-# Install EF tools
-dotnet tool install --global dotnet-ef
-
-# Apply migration
-dotnet ef database update \
-  --project ../Khetify.Infrastructure/Khetify.Infrastructure.csproj \
-  --startup-project .
-```
-
-This creates all 14 tables, triggers, functions, indexes, and seeds the admin user.
-
----
-
-## 🌐 Step 7: Deploy Frontend to Azure Static Web Apps
-
-```bash
-# Create Static Web App
-az staticwebapp create \
-  --name khetify-frontend \
-  --resource-group khetify-rg \
-  --source "https://dev.azure.com/{ORG}/{PROJECT}/_git/Khetify-Frontend" \
-  --branch main \
-  --app-location "/" \
-  --output-location "dist"
-```
-
----
-
-## 📊 Step 8: Run the Pipeline
+## 📊 Step 5: Create & Run Pipeline
 
 1. Go to **Pipelines** → **New Pipeline**
-2. Select **Azure Repos Git** → Select your repo
+2. Select **Azure Repos Git** → Select your backend repo
 3. Choose **Existing Azure Pipelines YAML file** → Select `/azure-pipelines.yml`
 4. Click **Run**
 
 ---
 
-## 🔄 Pipeline Flow
+## 🔄 Step 6: Run EF Core Migration (First Time)
 
+After the API deploys, run the migration to create all 15 tables:
+
+```bash
+# Locally with the Azure DB connection string
+cd public/backup/dotnet-backend
+
+export ConnectionStrings__DefaultConnection="Host=khetify-db-server.postgres.database.azure.com;Port=5432;Database=khetify;Username=khetifyadmin;Password=YOUR_PASSWORD;SSL Mode=Require;Trust Server Certificate=true"
+
+dotnet tool install --global dotnet-ef
+
+dotnet ef database update \
+  --project src/Khetify.Infrastructure/Khetify.Infrastructure.csproj \
+  --startup-project src/Khetify.API/Khetify.API.csproj
 ```
-main branch push → Build Backend + Frontend → Deploy to Production
-develop branch push → Build Backend + Frontend → Deploy to Staging
-PR to main → Build & Test only (no deploy)
+
+This creates all tables, triggers, indexes, and seeds the admin user.
+
+---
+
+## ✅ Step 7: Verify Deployment
+
+```bash
+# Test the API
+curl https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net/api/products
+
+# Test login
+curl -X POST https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@khetify.com","password":"Admin@123"}'
 ```
+
+---
+
+## 🔒 Default Admin Credentials
+
+- **Email**: `admin@khetify.com`
+- **Password**: `Admin@123`
+
+⚠️ **Change this immediately in production!**
 
 ---
 
@@ -197,24 +173,22 @@ PR to main → Build & Test only (no deploy)
 
 ---
 
-## 🔒 Default Admin Credentials
-
-After migration, login with:
-- **Email**: `admin@khetify.com`
-- **Password**: `Admin@123`
-
-⚠️ **Change this immediately in production!**
-
----
-
-## 🧪 Test Endpoints
+## 🌐 Frontend Deployment (Azure Static Web Apps)
 
 ```bash
-# Health check
-curl https://khetify-api.azurewebsites.net/api/products
+az staticwebapp create \
+  --name khetify-frontend \
+  --resource-group khetify-rg \
+  --source "https://dev.azure.com/{ORG}/Khetify/_git/Khetify-Frontend" \
+  --branch main \
+  --app-location "/" \
+  --output-location "dist"
+```
 
-# Login
-curl -X POST https://khetify-api.azurewebsites.net/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@khetify.com","password":"Admin@123"}'
+Once deployed, add the Static Web App URL to CORS in App Service:
+```bash
+az webapp config appsettings set \
+  --name khetify-api \
+  --resource-group khetify-rg \
+  --settings "Cors__AllowedOrigins__2=https://YOUR-STATIC-WEBAPP-URL.azurestaticapps.net"
 ```

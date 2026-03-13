@@ -9,4 +9,5 @@ services:
       - Jwt__Issuer=Khetify
       - Jwt__Audience=KhetifyApp
       - Cors__AllowedOrigins__0=http://localhost:5173
+      - Cors__AllowedOrigins__1=https://khetify-api-dve2hrdcbubfemdn.centralindia-01.azurewebsites.net
       - ASPNETCORE_ENVIRONMENT=Production
