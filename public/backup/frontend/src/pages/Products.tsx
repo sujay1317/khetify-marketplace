@@ -51,7 +51,7 @@ const Products: React.FC = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const productsData = await productsApi.getAll({ approved: true });
+      const productsData = await productsApi.getAll();
       
       const transformedProducts: Product[] = productsData.map((p: ProductDto) => ({
         id: p.id,
