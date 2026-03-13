@@ -1,0 +1,192 @@
+# Azure DevOps CI/CD Pipeline for Khetify
+# Builds .NET 10 backend + React frontend, runs tests, and deploys to Azure
+
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  buildConfiguration: 'Release'
+  dotnetVersion: '10.0.x'
+  nodeVersion: '20.x'
+  # Azure Resources - Set these in Azure DevOps Pipeline Variables (secret)
+  # AZURE_SQL_CONNECTION_STRING
+  # JWT_SECRET_KEY
+  # AZURE_WEBAPP_NAME
+
+stages:
+
+# ==================== BUILD STAGE ====================
+- stage: Build
+  displayName: 'Build & Test'
+  jobs:
+
+  # ----- .NET Backend Build -----
+  - job: BuildBackend
+    displayName: 'Build .NET Backend'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '$(dotnetVersion)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: 'src/**/*.csproj'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution'
+      inputs:
+        command: 'build'
+        projects: 'src/**/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Tests'
+      inputs:
+        command: 'test'
+        projects: 'src/**/*Tests*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage"'
+      continueOnError: true
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish API'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'src/Khetify.API/Khetify.API.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload API Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/api'
+        ArtifactName: 'api'
+
+  # ----- React Frontend Build -----
+  - job: BuildFrontend
+    displayName: 'Build React Frontend'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: NodeTool@0
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '$(nodeVersion)'
+
+    - script: |
+        cd ../frontend
+        npm ci
+      displayName: 'Install Dependencies'
+
+    - script: |
+        cd ../frontend
+        npm run build
+      displayName: 'Build Frontend'
+      env:
+        VITE_API_URL: $(API_URL)
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload Frontend Artifact'
+      inputs:
+        PathtoPublish: '../frontend/dist'
+        ArtifactName: 'frontend'
+
+# ==================== DEPLOY TO STAGING ====================
+- stage: DeployStaging
+  displayName: 'Deploy to Staging'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+  jobs:
+  - deployment: DeployAPI
+    displayName: 'Deploy API to Staging'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            displayName: 'Deploy API to Azure App Service'
+            inputs:
+              azureSubscription: '$(AZURE_SUBSCRIPTION)'
+              appType: 'webAppLinux'
+              appName: '$(AZURE_WEBAPP_NAME)-staging'
+              package: '$(Pipeline.Workspace)/api/**/*.zip'
+
+          # Run EF Core Migrations
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+
+          - script: |
+              dotnet tool install --global dotnet-ef
+              dotnet ef database update --project src/Khetify.Infrastructure/Khetify.Infrastructure.csproj --startup-project src/Khetify.API/Khetify.API.csproj
+            displayName: 'Run DB Migrations'
+            env:
+              ConnectionStrings__DefaultConnection: $(AZURE_SQL_CONNECTION_STRING_STAGING)
+
+# ==================== DEPLOY TO PRODUCTION ====================
+- stage: DeployProduction
+  displayName: 'Deploy to Production'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: DeployAPI
+    displayName: 'Deploy API to Production'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            displayName: 'Deploy API to Azure App Service'
+            inputs:
+              azureSubscription: '$(AZURE_SUBSCRIPTION)'
+              appType: 'webAppLinux'
+              appName: '$(AZURE_WEBAPP_NAME)'
+              package: '$(Pipeline.Workspace)/api/**/*.zip'
+
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '$(dotnetVersion)'
+
+          - script: |
+              dotnet tool install --global dotnet-ef
+              dotnet ef database update --project src/Khetify.Infrastructure/Khetify.Infrastructure.csproj --startup-project src/Khetify.API/Khetify.API.csproj
+            displayName: 'Run DB Migrations'
+            env:
+              ConnectionStrings__DefaultConnection: $(AZURE_SQL_CONNECTION_STRING)
+
+  - deployment: DeployFrontend
+    displayName: 'Deploy Frontend to Azure Static Web App'
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureStaticWebApp@0
+            displayName: 'Deploy to Azure Static Web Apps'
+            inputs:
+              azure_static_web_apps_api_token: $(AZURE_STATIC_WEBAPP_TOKEN)
+              app_location: '$(Pipeline.Workspace)/frontend'
+              skip_app_build: true
