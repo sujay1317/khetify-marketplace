@@ -4,31 +4,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=khetify;Username=postgres;Password=khetify_secret
+      - ConnectionStrings__DefaultConnection=Host=khetify-db-server.postgres.database.azure.com;Port=5432;Database=postgres;Username=khetifyadmin;Password=SujayK@1307;SSL Mode=Require;Trust Server Certificate=true
       - Jwt__Secret=your-production-secret-key-minimum-32-characters
       - Jwt__Issuer=Khetify
       - Jwt__Audience=KhetifyApp
       - Cors__AllowedOrigins__0=http://localhost:5173
       - ASPNETCORE_ENVIRONMENT=Production
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: khetify
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: khetify_secret
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  pgdata:
