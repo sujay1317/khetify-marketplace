@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi, usersApi, apiClient, type ProfileDto } from '@/services/api';
+import { authApi, usersApi, apiClient, type ProfileDto, type AuthMeResponse } from '@/services/api';
 
 type AppRole = 'admin' | 'seller' | 'customer';
 
@@ -38,8 +38,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loadUser = async () => {
     try {
-      const userData = await authApi.me();
-      setUser({ id: userData.id, email: userData.email });
+      // /auth/me returns { id, role } — no email
+      const userData: AuthMeResponse = await authApi.me();
+      // Store email from localStorage if available (saved during login/signup)
+      const savedEmail = localStorage.getItem('auth_email') || '';
+      setUser({ id: String(userData.id), email: savedEmail });
       setRole(userData.role as AppRole);
       try {
         const profileData = await usersApi.getProfile();
@@ -49,6 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     } catch {
       apiClient.setToken(null);
+      localStorage.removeItem('auth_email');
       setUser(null);
       setRole(null);
       setProfile(null);
@@ -60,7 +64,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signIn = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
     apiClient.setToken(response.token);
-    setUser({ id: response.user.id, email: response.user.email });
+    localStorage.setItem('auth_email', email);
+    setUser({ id: response.user.id, email: response.user.email || email });
     setRole(response.user.role as AppRole);
     try {
       const profileData = await usersApi.getProfile();
@@ -73,7 +78,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     const response = await authApi.register({ email, password, fullName, phone });
     apiClient.setToken(response.token);
-    setUser({ id: response.user.id, email: response.user.email });
+    localStorage.setItem('auth_email', email);
+    setUser({ id: response.user.id, email: response.user.email || email });
     setRole(response.user.role as AppRole);
     try {
       const profileData = await usersApi.getProfile();
@@ -85,6 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signOut = async () => {
     apiClient.setToken(null);
+    localStorage.removeItem('auth_email');
     setUser(null);
     setProfile(null);
     setRole(null);

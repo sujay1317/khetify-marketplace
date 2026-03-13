@@ -33,7 +33,7 @@ class ApiClient {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(error.message || `API Error: ${response.status}`);
+      throw new Error(error.message || error.error || `API Error: ${response.status}`);
     }
 
     if (response.status === 204) return {} as T;
@@ -64,11 +64,13 @@ export const apiClient = new ApiClient();
 export interface LoginRequest { email: string; password: string; }
 export interface RegisterRequest { email: string; password: string; fullName: string; phone?: string; }
 export interface AuthResponse { token: string; user: { id: string; email: string; role: string; fullName: string; }; }
+// Backend /auth/me now returns { id, email, role }
+export interface AuthMeResponse { id: string; email: string; role: string; }
 
 export const authApi = {
   login: (data: LoginRequest) => apiClient.post<AuthResponse>('/auth/login', data),
   register: (data: RegisterRequest) => apiClient.post<AuthResponse>('/auth/register', data),
-  me: () => apiClient.get<AuthResponse['user']>('/auth/me'),
+  me: () => apiClient.get<AuthMeResponse>('/auth/me'),
   changePassword: (data: { currentPassword: string; newPassword: string }) => apiClient.post('/auth/change-password', data),
 };
 
@@ -87,21 +89,39 @@ export interface CreateProductRequest {
   unit?: string; category: string; image?: string; isOrganic?: boolean; stock?: number;
 }
 
+// Backend supports: ?category, ?search, ?isOrganic, ?sort, ?page, ?pageSize
 export const productsApi = {
-  getAll: (params?: { category?: string; approved?: boolean }) => {
+  getAll: (params?: { category?: string; search?: string; isOrganic?: boolean; sort?: string; page?: number; pageSize?: number }) => {
     const query = new URLSearchParams();
     if (params?.category) query.set('category', params.category);
-    if (params?.approved !== undefined) query.set('approved', String(params.approved));
+    if (params?.search) query.set('search', params.search);
+    if (params?.isOrganic !== undefined) query.set('isOrganic', String(params.isOrganic));
+    if (params?.sort) query.set('sort', params.sort);
+    if (params?.page) query.set('page', String(params.page));
+    if (params?.pageSize) query.set('pageSize', String(params.pageSize));
     return apiClient.get<ProductDto[]>(`/products?${query}`);
   },
   getById: (id: string) => apiClient.get<ProductDto>(`/products/${id}`),
   getBySeller: (sellerId: string) => apiClient.get<ProductDto[]>(`/products/seller/${sellerId}`),
-  getImages: (productId: string) => apiClient.get<{ id: string; imageUrl: string; displayOrder: number }[]>(`/products/${productId}/images`),
+  getMyProducts: () => apiClient.get<ProductDto[]>('/products/my-products'),
+  getPending: () => apiClient.get<ProductDto[]>('/products/pending'),
   create: (data: CreateProductRequest) => apiClient.post<ProductDto>('/products', data),
   update: (id: string, data: Partial<CreateProductRequest>) => apiClient.put<ProductDto>(`/products/${id}`, data),
   delete: (id: string) => apiClient.delete(`/products/${id}`),
-  approve: (id: string, approved: boolean) => apiClient.patch(`/products/${id}/approve`, { isApproved: approved }),
-  getFeatured: () => apiClient.get<ProductDto[]>('/products/featured'),
+  // Backend uses POST not PATCH for approve
+  approve: (id: string) => apiClient.post(`/products/${id}/approve`),
+  // Upload image to specific product (returns image record)
+  uploadImage: (productId: string, file: File, displayOrder = 0) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers: Record<string, string> = {};
+    const token = apiClient.getToken();
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return fetch(`${API_URL}/products/${productId}/images?displayOrder=${displayOrder}`, {
+      method: 'POST', headers, body: formData,
+    }).then(r => r.json());
+  },
+  deleteImage: (imageId: string) => apiClient.delete(`/products/images/${imageId}`),
 };
 
 // ─── Orders ──────────────────────────────────────────
@@ -120,13 +140,16 @@ export interface CreateOrderRequest {
 }
 
 export const ordersApi = {
-  getAll: () => apiClient.get<OrderDto[]>('/orders'),
+  // Admin: get all orders
+  getAll: () => apiClient.get<OrderDto[]>('/orders/all'),
   getById: (id: string) => apiClient.get<OrderDto>(`/orders/${id}`),
-  getMyOrders: () => apiClient.get<OrderDto[]>('/orders/my'),
-  getSellerOrders: () => apiClient.get<OrderItemDto[]>('/orders/seller'),
-  getOrderItems: (orderId: string) => apiClient.get<OrderItemDto[]>(`/orders/${orderId}/items`),
+  // Customer: get my orders
+  getMyOrders: () => apiClient.get<OrderDto[]>('/orders/my-orders'),
+  // Seller: get seller orders
+  getSellerOrders: () => apiClient.get<OrderItemDto[]>('/orders/seller-orders'),
   create: (data: CreateOrderRequest) => apiClient.post<OrderDto>('/orders', data),
   updateStatus: (id: string, status: string) => apiClient.patch(`/orders/${id}/status`, { status }),
+  addTracking: (id: string, data: { status: string; description?: string }) => apiClient.post(`/orders/${id}/tracking`, data),
 };
 
 // ─── Reviews ─────────────────────────────────────────
@@ -155,22 +178,27 @@ export interface UserWithRoleDto {
 export const usersApi = {
   getProfile: () => apiClient.get<ProfileDto>('/users/profile'),
   updateProfile: (data: { fullName?: string; phone?: string }) => apiClient.put('/users/profile', data),
-  getAllUsers: () => apiClient.get<UserWithRoleDto[]>('/users'),
-  updateRole: (userId: string, role: string) => apiClient.patch(`/users/${userId}/role`, { role }),
-  getSellerPublicInfo: (sellerId: string) => apiClient.get<ProfileDto>(`/users/seller/${sellerId}/public`),
+  uploadAvatar: (file: File) => apiClient.upload<ProfileDto>('/users/profile/avatar', file, 'file'),
+  uploadShopImage: (file: File) => apiClient.upload<ProfileDto>('/users/profile/shop-image', file, 'file'),
+  // Public endpoints
+  getSellerPublicInfo: (sellerId: string) => apiClient.get<ProfileDto>(`/users/sellers/${sellerId}`),
   getSellers: () => apiClient.get<ProfileDto[]>('/users/sellers'),
-  createSeller: (data: { email: string; password: string; fullName: string; phone?: string; freeDelivery?: boolean }) => apiClient.post('/users/create-seller', data),
-  changeUserPassword: (userId: string, newPassword: string) => apiClient.post('/users/change-password', { userId, newPassword }),
-  deleteUser: (userId: string) => apiClient.delete(`/users/${userId}`),
+  // Admin endpoints
+  getAllUsers: () => apiClient.get<UserWithRoleDto[]>('/users/admin/all'),
+  createSeller: (data: { email: string; password: string; fullName: string; phone?: string; freeDelivery?: boolean }) => apiClient.post('/users/admin/create-seller', data),
+  changeUserPassword: (data: { userId: string; newPassword: string }) => apiClient.post('/users/admin/update-password', data),
+  deleteUser: (userId: string) => apiClient.delete(`/users/admin/${userId}`),
 };
 
 // ─── Wishlist ────────────────────────────────────────
+// Backend uses productId as route param, not request body
 export interface WishlistItemDto { id: string; productId: string; createdAt: string; }
 
 export const wishlistApi = {
   getAll: () => apiClient.get<WishlistItemDto[]>('/wishlist'),
-  add: (productId: string) => apiClient.post<WishlistItemDto>('/wishlist', { productId }),
-  remove: (id: string) => apiClient.delete(`/wishlist/${id}`),
+  add: (productId: string) => apiClient.post<WishlistItemDto>(`/wishlist/${productId}`),
+  // Backend DELETE uses productId, not wishlist item id
+  remove: (productId: string) => apiClient.delete(`/wishlist/${productId}`),
 };
 
 // ─── Coupons ─────────────────────────────────────────
@@ -181,12 +209,15 @@ export interface CouponDto {
 }
 
 export const couponsApi = {
+  // Admin: get all coupons
   getAll: () => apiClient.get<CouponDto[]>('/coupons'),
+  // Public: get active coupons
+  getActive: () => apiClient.get<CouponDto[]>('/coupons/active'),
   create: (data: Partial<CouponDto>) => apiClient.post<CouponDto>('/coupons', data),
   update: (id: string, data: Partial<CouponDto>) => apiClient.put<CouponDto>(`/coupons/${id}`, data),
-  toggle: (id: string) => apiClient.patch(`/coupons/${id}/toggle`),
   delete: (id: string) => apiClient.delete(`/coupons/${id}`),
   validate: (code: string, orderAmount: number) => apiClient.post<CouponDto>('/coupons/validate', { code, orderAmount }),
+  // Note: No toggle endpoint on backend — use update with isActive field instead
 };
 
 // ─── Notifications ───────────────────────────────────
@@ -197,8 +228,10 @@ export interface NotificationDto {
 
 export const notificationsApi = {
   getAll: () => apiClient.get<NotificationDto[]>('/notifications'),
+  getUnreadCount: () => apiClient.get<{ count: number }>('/notifications/unread-count'),
   markAsRead: (id: string) => apiClient.patch(`/notifications/${id}/read`),
   markAllAsRead: () => apiClient.patch('/notifications/read-all'),
+  delete: (id: string) => apiClient.delete(`/notifications/${id}`),
 };
 
 // ─── Forum ───────────────────────────────────────────
@@ -213,21 +246,28 @@ export interface ForumCommentDto {
 }
 
 export const forumApi = {
-  getPosts: (params?: { category?: string; sortBy?: string }) => {
+  getPosts: (params?: { category?: string }) => {
     const query = new URLSearchParams();
     if (params?.category && params.category !== 'all') query.set('category', params.category);
-    if (params?.sortBy) query.set('sortBy', params.sortBy);
     return apiClient.get<ForumPostDto[]>(`/forum/posts?${query}`);
   },
+  getPost: (id: string) => apiClient.get<ForumPostDto>(`/forum/posts/${id}`),
   createPost: (data: { title: string; content: string; category: string }) => apiClient.post<ForumPostDto>('/forum/posts', data),
+  updatePost: (id: string, data: { title?: string; content?: string; category?: string }) => apiClient.put<ForumPostDto>(`/forum/posts/${id}`, data),
   deletePost: (id: string) => apiClient.delete(`/forum/posts/${id}`),
+  togglePin: (id: string) => apiClient.post(`/forum/posts/${id}/pin`),
+  // Comments
   getComments: (postId: string) => apiClient.get<ForumCommentDto[]>(`/forum/posts/${postId}/comments`),
   createComment: (postId: string, content: string) => apiClient.post<ForumCommentDto>(`/forum/posts/${postId}/comments`, { content }),
-  toggleLike: (postId: string) => apiClient.post(`/forum/posts/${postId}/like`),
+  updateComment: (id: string, content: string) => apiClient.put<ForumCommentDto>(`/forum/comments/${id}`, { content }),
+  deleteComment: (id: string) => apiClient.delete(`/forum/comments/${id}`),
+  // Likes
+  togglePostLike: (postId: string) => apiClient.post(`/forum/posts/${postId}/like`),
+  toggleCommentLike: (commentId: string) => apiClient.post(`/forum/comments/${commentId}/like`),
 };
 
 // ─── Upload ──────────────────────────────────────────
 export const uploadApi = {
-  productImage: (file: File) => apiClient.upload<{ url: string }>('/upload/product-image', file, 'image'),
-  shopImage: (file: File) => apiClient.upload<{ url: string }>('/upload/shop-image', file, 'image'),
+  productImage: (file: File) => apiClient.upload<{ url: string }>('/upload/product-image', file, 'file'),
+  shopImage: (file: File) => apiClient.upload<{ url: string }>('/upload/shop-image', file, 'file'),
 };

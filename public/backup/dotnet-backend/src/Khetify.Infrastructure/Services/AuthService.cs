@@ -98,4 +98,10 @@ public class AuthService : IAuthService
         // This is a placeholder implementation
         throw new NotImplementedException("Implement token-based password reset with email service");
     }
+
+    public async Task<string?> GetUserEmailAsync(Guid userId)
+    {
+        var user = await _db.Users.FindAsync(userId);
+        return user?.Email;
+    }
 }

@@ -9,10 +9,12 @@ namespace Khetify.API.Controllers;
 public class AuthController : BaseController
 {
     private readonly IAuthService _authService;
+    private readonly IUserService _userService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IUserService userService)
     {
         _authService = authService;
+        _userService = userService;
     }
 
     [HttpPost("register")]
@@ -74,11 +76,14 @@ public class AuthController : BaseController
 
     [Authorize]
     [HttpGet("me")]
-    public IActionResult GetMe()
+    public async Task<IActionResult> GetMe()
     {
+        var userId = GetUserId();
+        var email = await _authService.GetUserEmailAsync(userId);
         return Ok(new
         {
-            id = GetUserId(),
+            id = userId,
+            email = email ?? "",
             role = GetUserRole()
         });
     }
