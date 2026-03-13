@@ -10,11 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import khetifyLogo from '@/assets/khetify-logo-new.png';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
 type AppRole = 'admin' | 'seller' | 'customer';
@@ -26,7 +22,6 @@ const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -35,55 +30,29 @@ const Auth: React.FC = () => {
 
   useEffect(() => {
     if (user && role) {
-      if (role === 'admin') {
-        navigate('/admin');
-      } else if (role === 'seller') {
-        navigate('/seller');
-      } else {
-        navigate('/');
-      }
+      if (role === 'admin') navigate('/admin');
+      else if (role === 'seller') navigate('/seller');
+      else navigate('/');
     }
   }, [user, role, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password);
-        if (error) {
-          console.error('Login error:', error);
-          const errorMessage = error.message || '';
-
-          if (
-            errorMessage.includes('Failed to fetch') ||
-            errorMessage.includes('ERR_CONNECTION_TIMED_OUT')
-          ) {
-            toast.error('Connection timeout. Please check internet, disable VPN/extension, and try again.');
-          } else if (errorMessage.toLowerCase().includes('invalid login credentials')) {
-            toast.error('Invalid email or password. Please try again.');
-          } else {
-            toast.error(errorMessage || 'Login failed. Please check your credentials.');
-          }
-        } else {
-          toast.success('Login successful!');
-        }
+        await signIn(email, password);
+        toast.success('Login successful!');
       } else {
-        const { error } = await signUp(email, password, fullName, phone, selectedRole);
-        if (error) {
-          console.error('Signup error:', error);
-          toast.error(error.message || 'Signup failed. Please try again.');
-        } else {
-          toast.success('Account created successfully! You can now login.');
-        }
+        await signUp(email, password, fullName, phone);
+        toast.success('Account created successfully!');
       }
     } catch (err: any) {
-      console.error('Auth unexpected error:', err);
+      console.error('Auth error:', err);
       if (err?.message?.includes('fetch') || err?.message?.includes('network')) {
-        toast.error('Network error. Please check your internet connection and try again.');
+        toast.error('Network error. Please check your internet connection.');
       } else {
-        toast.error(err?.message || 'An unexpected error occurred. Please try again.');
+        toast.error(err?.message || 'Authentication failed. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -96,50 +65,21 @@ const Auth: React.FC = () => {
       <main className="container mx-auto px-4 py-12 flex items-center justify-center min-h-[calc(100vh-80px)]">
         <Card className="w-full max-w-md p-8 animate-scale-in">
           <div className="text-center mb-8">
-            <img 
-              src={khetifyLogo} 
-              alt="KHETIFY Logo" 
-              className="w-20 h-20 mx-auto mb-4 object-contain"
-            />
+            <img src={khetifyLogo} alt="KHETIFY Logo" className="w-20 h-20 mx-auto mb-4 object-contain" />
             <h1 className="text-2xl font-bold font-heading flex items-center justify-center gap-0">
-              <span className="text-primary">KHETIFY</span>
-              <span className="text-secondary">.shop</span>
+              <span className="text-primary">KHETIFY</span><span className="text-secondary">.shop</span>
             </h1>
-            <p className="text-muted-foreground text-sm mt-2">
-              {isLogin ? t('welcomeBack') : t('createAccount')}
-            </p>
+            <p className="text-muted-foreground text-sm mt-2">{isLogin ? t('welcomeBack') : t('createAccount')}</p>
           </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input 
-                    placeholder={t('fullName')} 
-                    className="pl-10" 
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required 
-                  />
-                </div>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input 
-                    type="tel" 
-                    placeholder={t('phone')} 
-                    className="pl-10" 
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required 
-                  />
-                </div>
+                <div className="relative"><User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" /><Input placeholder={t('fullName')} className="pl-10" value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
+                <div className="relative"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" /><Input type="tel" placeholder={t('phone')} className="pl-10" value={phone} onChange={(e) => setPhone(e.target.value)} required /></div>
                 <div>
                   <label className="text-sm font-medium mb-2 block">{t('seller')}:</label>
                   <Select value={selectedRole} onValueChange={(value: AppRole) => setSelectedRole(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="customer">👤 {t('profile')} - {t('shopNow')}</SelectItem>
                       <SelectItem value="seller">🌾 {t('seller')} - {t('products')}</SelectItem>
@@ -148,51 +88,19 @@ const Auth: React.FC = () => {
                 </div>
               </>
             )}
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input 
-                type="email" 
-                placeholder={t('email')} 
-                className="pl-10" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
-            </div>
+            <div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" /><Input type="email" placeholder={t('email')} className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} required /></div>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder={t('password')}
-                className="pl-10 pr-10"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
+              <Input type={showPassword ? 'text' : 'password'} placeholder={t('password')} className="pl-10 pr-10" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-
-            <Button type="submit" variant="default" size="lg" className="w-full" disabled={isLoading}>
-              {isLoading ? t('loading') : isLogin ? t('login') : t('signup')}
-            </Button>
+            <Button type="submit" variant="default" size="lg" className="w-full" disabled={isLoading}>{isLoading ? t('loading') : isLogin ? t('login') : t('signup')}</Button>
           </form>
-
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">
-              {isLogin ? t('dontHaveAccount') + ' ' : t('alreadyHaveAccount') + ' '}
-            </span>
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary font-medium hover:underline"
-            >
-              {isLogin ? t('signup') : t('login')}
-            </button>
+            <span className="text-muted-foreground">{isLogin ? t('dontHaveAccount') + ' ' : t('alreadyHaveAccount') + ' '}</span>
+            <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">{isLogin ? t('signup') : t('login')}</button>
           </div>
         </Card>
       </main>
