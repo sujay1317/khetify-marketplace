@@ -4,7 +4,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - ConnectionStrings__DefaultConnection=Host=khetify-db-server.postgres.database.azure.com;Port=5432;Database=postgres;Username=khetifyadmin;Password=SujayK@1307;SSL Mode=Require;Trust Server Certificate=true
+      - ConnectionStrings__DefaultConnection=Host=khetify-db-server.postgres.database.azure.com;Port=5432;Database=khetify;Username=khetifyadmin;Password=YOUR_PASSWORD_HERE;SSL Mode=Require;Trust Server Certificate=true
       - Jwt__Secret=your-production-secret-key-minimum-32-characters
       - Jwt__Issuer=Khetify
       - Jwt__Audience=KhetifyApp
