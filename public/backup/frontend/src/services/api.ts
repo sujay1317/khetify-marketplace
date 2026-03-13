@@ -64,8 +64,8 @@ export const apiClient = new ApiClient();
 export interface LoginRequest { email: string; password: string; }
 export interface RegisterRequest { email: string; password: string; fullName: string; phone?: string; }
 export interface AuthResponse { token: string; user: { id: string; email: string; role: string; fullName: string; }; }
-// Backend /auth/me returns { id, role } — no email field
-export interface AuthMeResponse { id: string; role: string; }
+// Backend /auth/me now returns { id, email, role }
+export interface AuthMeResponse { id: string; email: string; role: string; }
 
 export const authApi = {
   login: (data: LoginRequest) => apiClient.post<AuthResponse>('/auth/login', data),
