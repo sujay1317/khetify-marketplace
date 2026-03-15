@@ -139,6 +139,27 @@ export interface CreateOrderRequest {
   items: { productId: string; productName: string; quantity: number; price: number; sellerId: string }[];
 }
 
+export interface SellerOrderReportDto {
+  totalOrders: number;
+  totalRevenue: number;
+  dailyReports: DailyReportDto[];
+}
+export interface DailyReportDto {
+  date: string;
+  orderCount: number;
+  totalRevenue: number;
+  orders: SellerReportOrderDto[];
+}
+export interface SellerReportOrderDto {
+  id: string;
+  customerName: string;
+  total: number;
+  status: string;
+  paymentMethod: string;
+  createdAt: string;
+  items: OrderItemDto[];
+}
+
 export const ordersApi = {
   // Admin: get all orders
   getAll: () => apiClient.get<OrderDto[]>('/orders/all'),
@@ -150,6 +171,12 @@ export const ordersApi = {
   create: (data: CreateOrderRequest) => apiClient.post<OrderDto>('/orders', data),
   updateStatus: (id: string, status: string) => apiClient.patch(`/orders/${id}/status`, { status }),
   addTracking: (id: string, data: { status: string; description?: string }) => apiClient.post(`/orders/${id}/tracking`, data),
+  // Admin: seller order report
+  getSellerOrderReport: (sellerId: string, date?: string) => {
+    const query = date ? `?date=${date}` : '';
+    return apiClient.get<SellerOrderReportDto>(`/orders/seller/${sellerId}/report${query}`);
+  },
+  getOrderItems: (orderId: string) => apiClient.get<OrderItemDto[]>(`/orders/${orderId}/items`),
 };
 
 // ─── Reviews ─────────────────────────────────────────

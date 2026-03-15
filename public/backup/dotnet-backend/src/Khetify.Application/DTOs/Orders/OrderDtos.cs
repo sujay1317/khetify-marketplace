@@ -45,3 +45,26 @@ public record OrderItemDto(
 public record OrderTrackingDto(Guid Id, string Status, string? Description, DateTime CreatedAt);
 
 public record AddTrackingDto(string Status, string? Description);
+
+public record SellerOrderReportDto(
+    int TotalOrders,
+    decimal TotalRevenue,
+    List<DailyReportDto> DailyReports
+);
+
+public record DailyReportDto(
+    string Date,
+    int OrderCount,
+    decimal TotalRevenue,
+    List<SellerReportOrderDto> Orders
+);
+
+public record SellerReportOrderDto(
+    Guid Id,
+    string CustomerName,
+    decimal Total,
+    string Status,
+    string PaymentMethod,
+    DateTime CreatedAt,
+    List<OrderItemDto> Items
+);
