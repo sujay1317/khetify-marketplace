@@ -190,6 +190,64 @@ public class OrderService : IOrderService
         return new OrderTrackingDto(tracking.Id, tracking.Status, tracking.Description, tracking.CreatedAt);
     }
 
+    public async Task<SellerOrderReportDto> GetSellerOrderReportAsync(Guid sellerId, string? date = null)
+    {
+        // Get all order IDs that contain items from this seller
+        var query = _db.OrderItems.Where(oi => oi.SellerId == sellerId);
+        var orderIds = await query.Select(oi => oi.OrderId).Distinct().ToListAsync();
+
+        var ordersQuery = _db.Orders
+            .Include(o => o.Items)
+            .Include(o => o.Customer).ThenInclude(c => c.Profile)
+            .Where(o => orderIds.Contains(o.Id));
+
+        // Apply date filter if provided
+        if (!string.IsNullOrEmpty(date) && DateOnly.TryParse(date, out var filterDate))
+        {
+            var startUtc = filterDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            var endUtc = filterDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+            ordersQuery = ordersQuery.Where(o => o.CreatedAt >= startUtc && o.CreatedAt < endUtc);
+        }
+
+        var orders = await ordersQuery.OrderByDescending(o => o.CreatedAt).ToListAsync();
+
+        // Group by date and build report
+        var grouped = orders.GroupBy(o => o.CreatedAt.ToString("dd/MM/yyyy"));
+        var dailyReports = new List<DailyReportDto>();
+
+        foreach (var group in grouped)
+        {
+            var reportOrders = new List<SellerReportOrderDto>();
+            foreach (var order in group)
+            {
+                var sellerItems = order.Items.Where(i => i.SellerId == sellerId).ToList();
+                var sellerTotal = sellerItems.Sum(i => i.Price * i.Quantity);
+                reportOrders.Add(new SellerReportOrderDto(
+                    order.Id,
+                    order.Customer?.Profile?.FullName ?? "Unknown",
+                    sellerTotal,
+                    order.Status ?? "pending",
+                    order.PaymentMethod ?? "cod",
+                    order.CreatedAt,
+                    sellerItems.Select(i => new OrderItemDto(i.Id, i.ProductId, i.SellerId, i.ProductName, i.Quantity, i.Price)).ToList()
+                ));
+            }
+
+            dailyReports.Add(new DailyReportDto(
+                group.Key,
+                reportOrders.Count,
+                reportOrders.Sum(o => o.Total),
+                reportOrders
+            ));
+        }
+
+        return new SellerOrderReportDto(
+            dailyReports.Sum(d => d.OrderCount),
+            dailyReports.Sum(d => d.TotalRevenue),
+            dailyReports
+        );
+    }
+
     private static OrderDto MapToDto(Order o) => new(
         o.Id, o.CustomerId,
         o.Customer?.Profile?.FullName,
