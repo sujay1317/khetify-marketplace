@@ -11,4 +11,5 @@ public interface IOrderService
     Task<List<OrderDto>> GetAllOrdersAsync();
     Task<OrderDto> UpdateOrderStatusAsync(Guid orderId, string status, Guid userId, bool isAdmin);
     Task<OrderTrackingDto> AddOrderTrackingAsync(Guid orderId, AddTrackingDto dto, Guid userId, bool isAdmin);
+    Task<SellerOrderReportDto> GetSellerOrderReportAsync(Guid sellerId, string? date = null);
 }

@@ -82,4 +82,12 @@ public class OrdersController : BaseController
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [Authorize(Policy = "AdminOnly")]
+    [HttpGet("seller/{sellerId:guid}/report")]
+    public async Task<IActionResult> GetSellerOrderReport(Guid sellerId, [FromQuery] string? date = null)
+    {
+        var report = await _orderService.GetSellerOrderReportAsync(sellerId, date);
+        return Ok(report);
+    }
 }
