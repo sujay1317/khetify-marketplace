@@ -1,5 +1,5 @@
 // Khetify REST API Client — connects to .NET 10 Backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api';
 
 class ApiClient {
   private token: string | null = null;
