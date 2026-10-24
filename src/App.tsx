@@ -17,6 +17,7 @@ import SplashScreen from "@/components/layout/SplashScreen";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Auth from "./pages/Auth";
+import OAuthConsent from "./pages/OAuthConsent";
 
 // Lazy load less critical pages
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
@@ -90,6 +91,7 @@ const App = () => {
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/login" element={<Auth />} />
+                      <Route path="/oauth-consent" element={<OAuthConsent />} />
                       <Route path="/categories" element={<Products />} />
                       <Route path="/orders" element={<CustomerOrders />} />
                       <Route path="/profile" element={<CustomerProfile />} />
