@@ -17,6 +17,7 @@ import SplashScreen from "@/components/layout/SplashScreen";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Auth from "./pages/Auth";
+import OAuthConsent from "./pages/OAuthConsent";
 
 // Lazy load less critical pages
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
